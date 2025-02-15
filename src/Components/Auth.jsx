@@ -1,7 +1,10 @@
 import { auth, provider } from "../firebase";
 import { signInWithPopup } from "firebase/auth";
+import "./Auth.css";
 
 function Auth() {
+  
+  // Login Function
   const loginWithGoogle = async () => {
     try {
       await signInWithPopup(auth, provider);
@@ -11,10 +14,14 @@ function Auth() {
     }
   };
 
+
+
   return (
-    <button onClick={loginWithGoogle} className="btn btn-primary">
+    <div className="auth-container">
+      <button onClick={loginWithGoogle} className="auth-button">
       Login with Google
     </button>
+    </div>
   );
 }
 

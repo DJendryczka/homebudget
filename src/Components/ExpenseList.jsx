@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
-import { db } from "../firebase";
+import { useEffect, useState } from "react";
+import { db, auth } from "../firebase";
 import { collection, onSnapshot } from "firebase/firestore";
+import { signOut } from "firebase/auth";
 
 function ExpenseList() {
   const [expenses, setExpenses] = useState([]);
@@ -17,9 +18,22 @@ function ExpenseList() {
     return () => unsubscribe(); // Cleanup listener
   }, []);
 
+  // Logout Function
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      console.log("User logged out");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
   return (
     <div>
       <h2>Expenses</h2>
+      <button className="logout-button" onClick={handleLogout}>
+        Logout
+      </button>
       <ul>
         {expenses.map(exp => (
           <li key={exp.id}>
