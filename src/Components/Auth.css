@@ -258,11 +258,42 @@
 }
 
 @media (max-width: 860px) {
+  .hero-page {
+    padding-left: 0;
+    padding-right: 0;
+    justify-content: flex-start;
+    padding-top: 88px;
+  }
+
+  .hero-head,
+  .cta {
+    padding-left: 24px;
+    padding-right: 24px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .fan {
-    flex-wrap: wrap;
+    width: 100%;
     min-height: 0;
+    margin: 28px 0 24px;
+    padding: 8px 20px 16px;
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
     gap: 14px;
-    margin: 32px 0 28px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 20px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .fan::-webkit-scrollbar {
+    display: none;
   }
 
   .pillar,
@@ -270,13 +301,17 @@
   .pillar-bal,
   .pillar-bud,
   .pillar-rep {
-    transform: none;
+    flex: 0 0 78vw;
+    width: 78vw;
+    max-width: 280px;
+    height: 320px;
     margin: 0;
-    width: min(240px, 46vw);
-    height: 260px;
+    transform: none;
+    scroll-snap-align: center;
   }
 
-  .pillar:hover {
-    transform: translateY(-8px) scale(1.03);
+  .pillar:hover,
+  .pillar:active {
+    transform: none;
   }
 }
