@@ -4,31 +4,43 @@ import { signInWithPopup } from "firebase/auth";
 import "./Auth.css";
 
 const translations = {
-  pl: {
-    title: "HomeBudget",
-    subtitle: "Proste zarządzanie budżetem domowym",
-    description: "Kontroluj przychody i wydatki, ustawiaj limity i zobacz swoje finanse w jednym miejscu.",
-    login: "Zaloguj się przez Google",
-    features: ["Szybkie dodawanie transakcji", "Kategorie i raporty", "Wielojęzyczność"]
-  },
   sv: {
-    title: "HomeBudget",
-    subtitle: "Enkel hantering av hembudget",
-    description: "Kontrollera inkomster och utgifter, sätt gränser och se din ekonomi på ett ställe.",
-    login: "Logga in med Google",
-    features: ["Snabb tillägg av transaktioner", "Kategorier och rapporter", "Flerspråkigt"]
+    title: "Ta kontroll över din ekonomi",
+    subtitle: "HomeBudget — enkelt och tydligt",
+    description: "Lägg till inkomster och utgifter på sekunder. Se saldo, sätt budgetar och förstå vart pengarna tar vägen.",
+    login: "Kom igång med Google",
+    features: [
+      "Snabbt och enkelt att lägga till transaktioner",
+      "Tydlig översikt av månadens saldo",
+      "Kategorier, budgetar och rapporter"
+    ]
+  },
+  pl: {
+    title: "Przejmij kontrolę nad finansami",
+    subtitle: "HomeBudget — prosto i przejrzyście",
+    description: "Dodawaj przychody i wydatki w kilka sekund. Zobacz saldo, ustaw budżety i zrozum, dokąd idą pieniądze.",
+    login: "Zacznij z Google",
+    features: [
+      "Szybkie dodawanie transakcji",
+      "Przejrzysty podgląd salda miesiąca",
+      "Kategorie, budżety i raporty"
+    ]
   },
   en: {
-    title: "HomeBudget",
-    subtitle: "Simple home budget management",
-    description: "Track income and expenses, set limits and see your finances in one place.",
-    login: "Sign in with Google",
-    features: ["Quick transaction entry", "Categories and reports", "Multi-language"]
+    title: "Take control of your money",
+    subtitle: "HomeBudget — simple and clear",
+    description: "Add income and expenses in seconds. See your balance, set budgets and understand where your money goes.",
+    login: "Get started with Google",
+    features: [
+      "Quick and easy transaction entry",
+      "Clear monthly balance overview",
+      "Categories, budgets and reports"
+    ]
   }
 };
 
 function Auth() {
-  const [lang, setLang] = useState("pl");
+  const [lang, setLang] = useState("sv");
   const t = translations[lang];
 
   const loginWithGoogle = async () => {
@@ -42,14 +54,15 @@ function Auth() {
   return (
     <div className="hero-page">
       <div className="lang-switcher">
-        <button className={lang === "pl" ? "active" : ""} onClick={() => setLang("pl")}>PL</button>
         <button className={lang === "sv" ? "active" : ""} onClick={() => setLang("sv")}>SV</button>
+        <button className={lang === "pl" ? "active" : ""} onClick={() => setLang("pl")}>PL</button>
         <button className={lang === "en" ? "active" : ""} onClick={() => setLang("en")}>EN</button>
       </div>
 
       <div className="hero-content">
+        <div className="logo">HomeBudget</div>
         <h1>{t.title}</h1>
-        <h2>{t.subtitle}</h2>
+        <p className="subtitle">{t.subtitle}</p>
         <p className="description">{t.description}</p>
 
         <ul className="features">
@@ -59,7 +72,7 @@ function Auth() {
         </ul>
 
         <button onClick={loginWithGoogle} className="google-btn">
-          <svg width="18" height="18" viewBox="0 0 48 48" style={{ marginRight: 10 }}>
+          <svg width="20" height="20" viewBox="0 0 48 48">
             <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
             <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
             <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
@@ -67,6 +80,8 @@ function Auth() {
           </svg>
           {t.login}
         </button>
+
+        <p className="trust">Bezpieczne logowanie przez Google • Brak haseł</p>
       </div>
     </div>
   );
