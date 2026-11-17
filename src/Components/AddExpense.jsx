@@ -30,49 +30,36 @@ function AddExpense({ homeId }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-3 border rounded mb-4 bg-light">
-      <h4 className="mb-3">Add Transaction</h4>
-      <div className="row g-2">
-        <div className="col-md-4">
-          <input
-            className="form-control"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description"
-            required
-          />
-        </div>
-        <div className="col-md-2">
-          <input
-            className="form-control"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            type="number"
-            step="0.01"
-            placeholder="Amount"
-            required
-          />
-        </div>
-        <div className="col-md-3">
-          <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value)}>
-            {CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="col-md-2">
-          <select className="form-select" value={type} onChange={(e) => setType(e.target.value)}>
-            <option value="expense">Expense</option>
-            <option value="income">Income</option>
-          </select>
-        </div>
-        <div className="col-md-1">
-          <button type="submit" className="btn btn-primary w-100">
-            Add
-          </button>
-        </div>
+    <form onSubmit={handleSubmit} className="budget entry">
+      <h2>Add transaction</h2>
+      <p>Income and expenses for this home.</p>
+      <div className="entry-grid">
+        <input
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Description"
+          required
+        />
+        <input
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          type="number"
+          step="0.01"
+          placeholder="Amount"
+          required
+        />
+        <select value={category} onChange={(e) => setCategory(e.target.value)}>
+          {CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+        <select value={type} onChange={(e) => setType(e.target.value)}>
+          <option value="expense">Expense</option>
+          <option value="income">Income</option>
+        </select>
+        <button type="submit">Add</button>
       </div>
     </form>
   );

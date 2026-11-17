@@ -6,6 +6,7 @@ import { auth } from "./firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { ensureHome } from "./ensureHome";
 import "./App.css";
+import "./budget.css";
 
 function App() {
   const [user, loading] = useAuthState(auth);
@@ -35,17 +36,17 @@ function App() {
   }, [user]);
 
   if (loading || (user && !home && !homeError)) {
-    return <p className="text-center mt-5">Opening your home…</p>;
+    return <p className="app-status">Opening your home…</p>;
   }
 
   if (!user) return <Auth />;
 
   if (homeError) {
-    return <p className="text-center mt-5 text-danger">{homeError}</p>;
+    return <p className="app-status app-status-error">{homeError}</p>;
   }
 
   return (
-    <div className="container-fluid m-0 p-0">
+    <div className="app-shell">
       <AddExpense homeId={home.id} />
       <ExpenseList homeId={home.id} homeName={home.name} />
     </div>

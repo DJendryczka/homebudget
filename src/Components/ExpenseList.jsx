@@ -92,61 +92,45 @@ function ExpenseList({ homeId, homeName }) {
   const balance = totalIncome - totalExpense;
 
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
+    <section className="budget panel">
+      <div className="panel-head">
         <div>
-          <h2 className="mb-0">Transactions</h2>
-          <small className="text-muted">{homeName || "Home"}</small>
+          <h2>Transactions</h2>
+          <p className="home-label">{homeName || "Home"}</p>
         </div>
-        <button className="btn btn-outline-danger" onClick={handleLogout}>
-          Logout
+        <button className="logout" onClick={handleLogout}>
+          Log out
         </button>
       </div>
 
-      <div className="row mb-3">
-        <div className="col-md-4">
-          <div className="card text-bg-success">
-            <div className="card-body py-2">
-              <small>Income</small>
-              <h5 className="mb-0">${totalIncome.toFixed(2)}</h5>
-            </div>
-          </div>
+      <div className="totals">
+        <div className="total total-in">
+          <span>Income</span>
+          <strong>{totalIncome.toFixed(2)}</strong>
         </div>
-        <div className="col-md-4">
-          <div className="card text-bg-danger">
-            <div className="card-body py-2">
-              <small>Expenses</small>
-              <h5 className="mb-0">${totalExpense.toFixed(2)}</h5>
-            </div>
-          </div>
+        <div className="total total-out">
+          <span>Expenses</span>
+          <strong>{totalExpense.toFixed(2)}</strong>
         </div>
-        <div className="col-md-4">
-          <div className={`card ${balance >= 0 ? "text-bg-primary" : "text-bg-warning"}`}>
-            <div className="card-body py-2">
-              <small>Balance</small>
-              <h5 className="mb-0">${balance.toFixed(2)}</h5>
-            </div>
-          </div>
+        <div className={`total ${balance >= 0 ? "total-ok" : "total-bad"}`}>
+          <span>Balance</span>
+          <strong>{balance.toFixed(2)}</strong>
         </div>
       </div>
 
-      <div className="mb-3">
-        <label className="me-2">Select Month:</label>
-        <select
-          className="form-select w-auto d-inline-block"
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-        >
+      <label className="month">
+        Month
+        <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
           {monthOptions.map((month) => (
             <option key={month} value={month}>
               {month}
             </option>
           ))}
         </select>
-      </div>
+      </label>
 
       {currentExpenses.length > 0 ? (
-        <table className="table table-striped table-hover">
+        <table className="sheet">
           <thead>
             <tr>
               <th>Date</th>
@@ -164,18 +148,16 @@ function ExpenseList({ homeId, homeName }) {
                 <td>{exp.description}</td>
                 <td>{exp.category}</td>
                 <td>
-                  <span className={`badge ${exp.type === "income" ? "bg-success" : "bg-danger"}`}>
+                  <span className={`tag ${exp.type === "income" ? "tag-in" : "tag-out"}`}>
                     {exp.type}
                   </span>
                 </td>
-                <td className={exp.type === "income" ? "text-success" : "text-danger"}>
-                  {exp.type === "income" ? "+" : "-"}${exp.amount.toFixed(2)}
+                <td className={exp.type === "income" ? "money-in" : "money-out"}>
+                  {exp.type === "income" ? "+" : "−"}
+                  {exp.amount.toFixed(2)}
                 </td>
                 <td>
-                  <button
-                    className="btn btn-sm btn-outline-danger"
-                    onClick={() => handleDelete(exp.id)}
-                  >
+                  <button className="danger" onClick={() => handleDelete(exp.id)}>
                     Delete
                   </button>
                 </td>
@@ -184,9 +166,9 @@ function ExpenseList({ homeId, homeName }) {
           </tbody>
         </table>
       ) : (
-        <p className="text-center text-muted">No transactions found for {selectedMonth}.</p>
+        <p className="empty">No transactions for {selectedMonth}.</p>
       )}
-    </div>
+    </section>
   );
 }
 
