@@ -4,13 +4,13 @@
   box-sizing: border-box;
 }
 
+html,
+body,
 #root {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* Center content horizontally */
-  justify-content: center; /* Center content vertically */
-  text-align: center;
+  min-height: 100%;
 }
 
-
+#root {
+  min-height: 100vh;
+}
