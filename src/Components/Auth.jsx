@@ -10,7 +10,6 @@ const translations = {
     sub: "Fyra pelare som gör budgeten enkel att leva med varje dag.",
     login: "Logga in med Google",
     trust: "Säker inloggning via Google · inget lösenord",
-    palette: "Palett",
     cards: [
       { id: "tx", kicker: "01", title: "Transaktioner", text: "Lägg till inkomst eller utgift på några sekunder." },
       { id: "bal", kicker: "02", title: "Saldo", text: "Se månadens plus, minus och balans direkt." },
@@ -24,7 +23,6 @@ const translations = {
     sub: "Cztery filary, które sprawiają, że budżet jest prosty na co dzień.",
     login: "Zaloguj się przez Google",
     trust: "Bezpieczne logowanie przez Google · bez hasła",
-    palette: "Paleta",
     cards: [
       { id: "tx", kicker: "01", title: "Transakcje", text: "Dodaj przychód albo wydatek w kilka sekund." },
       { id: "bal", kicker: "02", title: "Saldo", text: "Zobacz plus, minus i bilans miesiąca od razu." },
@@ -38,7 +36,6 @@ const translations = {
     sub: "Four pillars that make a home budget easy to live with.",
     login: "Sign in with Google",
     trust: "Secure Google sign-in · no password",
-    palette: "Palette",
     cards: [
       { id: "tx", kicker: "01", title: "Transactions", text: "Add income or an expense in a few seconds." },
       { id: "bal", kicker: "02", title: "Balance", text: "See the month’s in, out and balance at a glance." },
@@ -47,13 +44,6 @@ const translations = {
     ],
   },
 };
-
-const palettes = [
-  { id: "a", name: "Nordic" },
-  { id: "b", name: "Forest" },
-  { id: "c", name: "Baltic" },
-  { id: "d", name: "Ledger" },
-];
 
 function CardArt({ id }) {
   if (id === "tx") {
@@ -96,7 +86,6 @@ function CardArt({ id }) {
 
 function Auth() {
   const [lang, setLang] = useState("sv");
-  const [palette, setPalette] = useState("a");
   const t = translations[lang];
 
   const loginWithGoogle = async () => {
@@ -108,7 +97,7 @@ function Auth() {
   };
 
   return (
-    <div className={`hero-page palette-${palette}`}>
+    <div className="hero-page">
       <div className="lang-switcher">
         <button className={lang === "sv" ? "active" : ""} onClick={() => setLang("sv")}>SV</button>
         <button className={lang === "pl" ? "active" : ""} onClick={() => setLang("pl")}>PL</button>
@@ -124,19 +113,6 @@ function Auth() {
         </h1>
         <p className="sub">{t.sub}</p>
       </header>
-
-      <div className="palette-switch" role="group" aria-label={t.palette}>
-        {palettes.map((item) => (
-          <button
-            key={item.id}
-            className={palette === item.id ? "active" : ""}
-            onClick={() => setPalette(item.id)}
-          >
-            <span className={`dot dot-${item.id}`} />
-            {item.id.toUpperCase()} {item.name}
-          </button>
-        ))}
-      </div>
 
       <div className="fan" role="list">
         {t.cards.map((card) => (
