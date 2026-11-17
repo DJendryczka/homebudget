@@ -1,104 +1,132 @@
 import { useEffect, useState } from "react";
 import { db, auth } from "../firebase";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, deleteDoc, doc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 
 function ExpenseList() {
-  // Helper: Get Current Month (YYYY-MM)
   function getCurrentMonth() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   }
 
-  // State for grouped expenses, selected month, and the logged-in user.
   const [expenses, setExpenses] = useState({});
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [user, setUser] = useState(null);
 
-  // Listen to auth state changes.
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged((currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      } else {
-        setUser(null);
-      }
+      setUser(currentUser || null);
     });
     return () => unsubscribeAuth();
   }, []);
 
-  // Listen to expenses from the correct collection once the user is set.
   useEffect(() => {
     if (!user) return;
-    // Use the same path as your working JS code.
     const expensesRef = collection(db, "users", user.uid, "expenses");
 
-    const unsubscribe = onSnapshot(
-      expensesRef,
-      (snapshot) => {
-        const expenseData = snapshot.docs.map((doc) => {
-          const data = doc.data();
+    const unsubscribe = onSnapshot(expensesRef, (snapshot) => {
+      const expenseData = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data();
 
-          // Convert createdAt to a Date.
-          let dateObj;
-          if (data.createdAt && data.createdAt.toDate) {
-            dateObj = data.createdAt.toDate();
-          } else if (data.createdAt) {
-            dateObj = new Date(data.createdAt);
-          } else {
-            dateObj = new Date(); // Fallback if missing.
-          }
-          const formattedDate = dateObj.toISOString().split("T")[0]; // YYYY-MM-DD
-          const monthKey = formattedDate.substring(0, 7); // YYYY-MM
+        let dateObj;
+        if (data.createdAt && data.createdAt.toDate) {
+          dateObj = data.createdAt.toDate();
+        } else if (data.createdAt) {
+          dateObj = new Date(data.createdAt);
+        } else {
+          dateObj = new Date();
+        }
+        const formattedDate = dateObj.toISOString().split("T")[0];
+        const monthKey = formattedDate.substring(0, 7);
 
-          return {
-            id: doc.id,
-            description: data.description || "Unknown",
-            amount: data.amount || 0,
-            date: formattedDate,
-            monthKey,
-          };
-        });
+        return {
+          id: docSnap.id,
+          description: data.description || "Unknown",
+          amount: data.amount || 0,
+          category: data.category || "Other",
+          type: data.type || "expense",
+          date: formattedDate,
+          monthKey,
+        };
+      });
 
-        // Group expenses by month (YYYY-MM)
-        const groupedExpenses = expenseData.reduce((acc, expense) => {
-          if (!acc[expense.monthKey]) acc[expense.monthKey] = [];
-          acc[expense.monthKey].push(expense);
-          return acc;
-        }, {});
-        setExpenses(groupedExpenses);
-      },
-      (error) => {
-        console.error("Error fetching expenses:", error);
-      }
-    );
+      const groupedExpenses = expenseData.reduce((acc, expense) => {
+        if (!acc[expense.monthKey]) acc[expense.monthKey] = [];
+        acc[expense.monthKey].push(expense);
+        return acc;
+      }, {});
+      setExpenses(groupedExpenses);
+    });
 
     return () => unsubscribe();
   }, [user]);
 
-  // Ensure the month selector always shows the selected/current month even if there is no data.
-  const monthOptions = [
-    ...new Set([...Object.keys(expenses), selectedMonth]),
-  ].sort((a, b) => b.localeCompare(a));
+  const handleDelete = async (id) => {
+    if (!user || !window.confirm("Delete this transaction?")) return;
+    try {
+      await deleteDoc(doc(db, "users", user.uid, "expenses", id));
+    } catch (error) {
+      console.error("Delete failed:", error);
+    }
+  };
 
-  // Logout handler.
+  const monthOptions = [...new Set([...Object.keys(expenses), selectedMonth])].sort((a, b) =>
+    b.localeCompare(a)
+  );
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      console.log("User logged out");
     } catch (error) {
       console.error("Logout failed:", error);
     }
   };
 
+  const currentExpenses = expenses[selectedMonth] || [];
+  const totalIncome = currentExpenses
+    .filter((e) => e.type === "income")
+    .reduce((sum, e) => sum + e.amount, 0);
+  const totalExpense = currentExpenses
+    .filter((e) => e.type === "expense")
+    .reduce((sum, e) => sum + e.amount, 0);
+  const balance = totalIncome - totalExpense;
+
   return (
     <div className="container mt-4">
-      <h2 className="text-center">Expenses</h2>
-      <button className="btn btn-danger mb-3" onClick={handleLogout}>
-        Logout
-      </button>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h2>Transactions</h2>
+        <button className="btn btn-outline-danger" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
 
-      {/* Month Selector */}
+      <div className="row mb-3">
+        <div className="col-md-4">
+          <div className="card text-bg-success">
+            <div className="card-body py-2">
+              <small>Income</small>
+              <h5 className="mb-0">${totalIncome.toFixed(2)}</h5>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-4">
+          <div className="card text-bg-danger">
+            <div className="card-body py-2">
+              <small>Expenses</small>
+              <h5 className="mb-0">${totalExpense.toFixed(2)}</h5>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-4">
+          <div className={`card ${balance >= 0 ? "text-bg-primary" : "text-bg-warning"}`}>
+            <div className="card-body py-2">
+              <small>Balance</small>
+              <h5 className="mb-0">${balance.toFixed(2)}</h5>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="mb-3">
         <label className="me-2">Select Month:</label>
         <select
@@ -114,28 +142,46 @@ function ExpenseList() {
         </select>
       </div>
 
-      {/* Expenses Table */}
-      {expenses[selectedMonth] && expenses[selectedMonth].length > 0 ? (
-        <table className="table table-striped">
+      {currentExpenses.length > 0 ? (
+        <table className="table table-striped table-hover">
           <thead>
             <tr>
-              <th>Description</th>
-              <th>Amount ($)</th>
               <th>Date</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
-            {expenses[selectedMonth].map((exp) => (
+            {currentExpenses.map((exp) => (
               <tr key={exp.id}>
-                <td>{exp.description}</td>
-                <td>${exp.amount.toFixed(2)}</td>
                 <td>{exp.date}</td>
+                <td>{exp.description}</td>
+                <td>{exp.category}</td>
+                <td>
+                  <span className={`badge ${exp.type === "income" ? "bg-success" : "bg-danger"}`}>
+                    {exp.type}
+                  </span>
+                </td>
+                <td className={exp.type === "income" ? "text-success" : "text-danger"}>
+                  {exp.type === "income" ? "+" : "-"}${exp.amount.toFixed(2)}
+                </td>
+                <td>
+                  <button
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={() => handleDelete(exp.id)}
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       ) : (
-        <p className="text-center">No expenses found for {selectedMonth}.</p>
+        <p className="text-center text-muted">No transactions found for {selectedMonth}.</p>
       )}
     </div>
   );
