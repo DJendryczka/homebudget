@@ -4,24 +4,23 @@ import { collection, addDoc } from "firebase/firestore";
 
 const CATEGORIES = ["Food", "Transport", "Housing", "Entertainment", "Health", "Salary", "Other"];
 
-function AddExpense() {
+function AddExpense({ homeId }) {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Other");
-  const [type, setType] = useState("expense"); // expense | income
+  const [type, setType] = useState("expense");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!description || !amount || !auth.currentUser) return;
+    if (!description || !amount || !auth.currentUser || !homeId) return;
 
-    const user = auth.currentUser;
-
-    await addDoc(collection(db, "users", user.uid, "expenses"), {
+    await addDoc(collection(db, "homes", homeId, "expenses"), {
       description,
       amount: parseFloat(amount),
       category,
-      type, // "expense" or "income"
+      type,
       createdAt: new Date(),
+      createdBy: auth.currentUser.uid,
     });
 
     setDescription("");

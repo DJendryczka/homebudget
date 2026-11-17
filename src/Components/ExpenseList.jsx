@@ -3,7 +3,7 @@ import { db, auth } from "../firebase";
 import { collection, onSnapshot, deleteDoc, doc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 
-function ExpenseList() {
+function ExpenseList({ homeId, homeName }) {
   function getCurrentMonth() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -21,8 +21,8 @@ function ExpenseList() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
-    const expensesRef = collection(db, "users", user.uid, "expenses");
+    if (!user || !homeId) return;
+    const expensesRef = collection(db, "homes", homeId, "expenses");
 
     const unsubscribe = onSnapshot(expensesRef, (snapshot) => {
       const expenseData = snapshot.docs.map((docSnap) => {
@@ -59,12 +59,12 @@ function ExpenseList() {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, homeId]);
 
   const handleDelete = async (id) => {
-    if (!user || !window.confirm("Delete this transaction?")) return;
+    if (!user || !homeId || !window.confirm("Delete this transaction?")) return;
     try {
-      await deleteDoc(doc(db, "users", user.uid, "expenses", id));
+      await deleteDoc(doc(db, "homes", homeId, "expenses", id));
     } catch (error) {
       console.error("Delete failed:", error);
     }
@@ -94,7 +94,10 @@ function ExpenseList() {
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>Transactions</h2>
+        <div>
+          <h2 className="mb-0">Transactions</h2>
+          <small className="text-muted">{homeName || "Home"}</small>
+        </div>
         <button className="btn btn-outline-danger" onClick={handleLogout}>
           Logout
         </button>
