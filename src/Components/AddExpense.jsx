@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { db, auth } from "../firebase";
 import { collection, addDoc } from "firebase/firestore";
+import { useI18n } from "../i18n";
 
-const CATEGORIES = ["Food", "Transport", "Housing", "Entertainment", "Health", "Salary", "Other"];
+const CATEGORY_KEYS = ["Food", "Transport", "Housing", "Entertainment", "Health", "Salary", "Other"];
 
 function AddExpense({ homeId }) {
+  const { t } = useI18n();
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Other");
@@ -31,13 +33,13 @@ function AddExpense({ homeId }) {
 
   return (
     <form onSubmit={handleSubmit} className="budget entry">
-      <h2>Add transaction</h2>
-      <p>Income and expenses for this home.</p>
+      <h2>{t.addTitle}</h2>
+      <p>{t.addHint}</p>
       <div className="entry-grid">
         <input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description"
+          placeholder={t.description}
           required
         />
         <input
@@ -45,21 +47,21 @@ function AddExpense({ homeId }) {
           onChange={(e) => setAmount(e.target.value)}
           type="number"
           step="0.01"
-          placeholder="Amount"
+          placeholder={t.amount}
           required
         />
         <select value={category} onChange={(e) => setCategory(e.target.value)}>
-          {CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
+          {CATEGORY_KEYS.map((key) => (
+            <option key={key} value={key}>
+              {t.categories[key]}
             </option>
           ))}
         </select>
         <select value={type} onChange={(e) => setType(e.target.value)}>
-          <option value="expense">Expense</option>
-          <option value="income">Income</option>
+          <option value="expense">{t.expense}</option>
+          <option value="income">{t.income}</option>
         </select>
-        <button type="submit">Add</button>
+        <button type="submit">{t.add}</button>
       </div>
     </form>
   );

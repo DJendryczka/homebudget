@@ -5,6 +5,7 @@ import AddExpense from "./Components/AddExpense";
 import { auth } from "./firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { ensureHome } from "./ensureHome";
+import { useI18n } from "./i18n";
 import "./App.css";
 import "./budget.css";
 
@@ -12,6 +13,7 @@ function App() {
   const [user, loading] = useAuthState(auth);
   const [home, setHome] = useState(null);
   const [homeError, setHomeError] = useState("");
+  const { t } = useI18n();
 
   useEffect(() => {
     if (!user) {
@@ -27,16 +29,16 @@ function App() {
       })
       .catch((error) => {
         console.error("Could not open home:", error);
-        if (!cancelled) setHomeError("Could not open your home. Check Firestore rules.");
+        if (!cancelled) setHomeError(t.homeError);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, t.homeError]);
 
   if (loading || (user && !home && !homeError)) {
-    return <p className="app-status">Opening your home…</p>;
+    return <p className="app-status">{t.opening}</p>;
   }
 
   if (!user) return <Auth />;

@@ -1,49 +1,7 @@
-import { useState } from "react";
 import { auth, provider } from "../firebase";
 import { signInWithPopup } from "firebase/auth";
+import { LangSwitch, useI18n } from "../i18n";
 import "./Auth.css";
-
-const translations = {
-  sv: {
-    headline: "Håll koll på pengarna.",
-    headline2: "Utan krångel.",
-    sub: "Fyra pelare som gör budgeten enkel att leva med varje dag.",
-    login: "Logga in med Google",
-    trust: "Säker inloggning via Google · inget lösenord",
-    cards: [
-      { id: "tx", kicker: "01", title: "Transaktioner", text: "Lägg till inkomst eller utgift på några sekunder." },
-      { id: "bal", kicker: "02", title: "Saldo", text: "Se månadens plus, minus och balans direkt." },
-      { id: "bud", kicker: "03", title: "Budgetar", text: "Sätt gränser per kategori och håll dig till dem." },
-      { id: "rep", kicker: "04", title: "Rapporter", text: "Förstå vart pengarna tar vägen, månad efter månad." },
-    ],
-  },
-  pl: {
-    headline: "Trzymaj pieniądze",
-    headline2: "pod kontrolą.",
-    sub: "Cztery filary, które sprawiają, że budżet jest prosty na co dzień.",
-    login: "Zaloguj się przez Google",
-    trust: "Bezpieczne logowanie przez Google · bez hasła",
-    cards: [
-      { id: "tx", kicker: "01", title: "Transakcje", text: "Dodaj przychód albo wydatek w kilka sekund." },
-      { id: "bal", kicker: "02", title: "Saldo", text: "Zobacz plus, minus i bilans miesiąca od razu." },
-      { id: "bud", kicker: "03", title: "Budżety", text: "Ustal limity na kategorie i trzymaj się ich." },
-      { id: "rep", kicker: "04", title: "Raporty", text: "Zrozum, dokąd idą pieniądze, miesiąc po miesiącu." },
-    ],
-  },
-  en: {
-    headline: "Keep your money",
-    headline2: "in clear view.",
-    sub: "Four pillars that make a home budget easy to live with.",
-    login: "Sign in with Google",
-    trust: "Secure Google sign-in · no password",
-    cards: [
-      { id: "tx", kicker: "01", title: "Transactions", text: "Add income or an expense in a few seconds." },
-      { id: "bal", kicker: "02", title: "Balance", text: "See the month’s in, out and balance at a glance." },
-      { id: "bud", kicker: "03", title: "Budgets", text: "Set a limit per category and stay inside it." },
-      { id: "rep", kicker: "04", title: "Reports", text: "Understand where the money goes, month after month." },
-    ],
-  },
-};
 
 function CardArt({ id }) {
   if (id === "tx") {
@@ -85,8 +43,7 @@ function CardArt({ id }) {
 }
 
 function Auth() {
-  const [lang, setLang] = useState("sv");
-  const t = translations[lang];
+  const { t } = useI18n();
 
   const loginWithGoogle = async () => {
     try {
@@ -98,11 +55,7 @@ function Auth() {
 
   return (
     <div className="hero-page">
-      <div className="lang-switcher">
-        <button className={lang === "sv" ? "active" : ""} onClick={() => setLang("sv")}>SV</button>
-        <button className={lang === "pl" ? "active" : ""} onClick={() => setLang("pl")}>PL</button>
-        <button className={lang === "en" ? "active" : ""} onClick={() => setLang("en")}>EN</button>
-      </div>
+      <LangSwitch />
 
       <header className="hero-head">
         <p className="brand">HomeBudget</p>
