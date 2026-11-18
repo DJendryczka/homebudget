@@ -3,13 +3,32 @@ import { db, auth } from "../firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { useI18n } from "../i18n";
 
-const CATEGORY_KEYS = ["Food", "Transport", "Housing", "Entertainment", "Health", "Salary", "Other"];
+const CATEGORY_KEYS = [
+  "Food",
+  "Sweets",
+  "Phone",
+  "Restaurant",
+  "Transport",
+  "Housing",
+  "Electricity",
+  "Internet",
+  "Subscriptions",
+  "Clothes",
+  "Health",
+  "Kids",
+  "Insurance",
+  "Entertainment",
+  "Gifts",
+  "Pets",
+  "Salary",
+  "Other",
+];
 
 function AddExpense({ homeId }) {
   const { t } = useI18n();
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("Other");
+  const [category, setCategory] = useState("Food");
   const [type, setType] = useState("expense");
 
   const handleSubmit = async (e) => {
@@ -27,7 +46,7 @@ function AddExpense({ homeId }) {
 
     setDescription("");
     setAmount("");
-    setCategory("Other");
+    setCategory("Food");
     setType("expense");
   };
 
