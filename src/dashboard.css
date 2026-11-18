@@ -14,7 +14,6 @@
   grid-template-columns: 1fr;
   gap: 8px;
   margin: 0;
-  height: 100%;
 }
 
 .dash .total {
@@ -34,6 +33,33 @@
 .dash .legend {
   margin: 0;
   font-size: 0.75rem;
+}
+
+.pots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.pot {
+  background: #f7f3ee;
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+
+.pot span {
+  display: block;
+  color: #8a7968;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pot strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 1rem;
 }
 
 .dash-grid {
