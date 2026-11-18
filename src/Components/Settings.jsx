@@ -4,6 +4,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { LangSwitch, useI18n } from "../i18n";
+import "../save-notice.css";
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
