@@ -1,68 +1,30 @@
-import { useEffect, useState } from "react";
-import { db, auth } from "../firebase";
-import { collection, onSnapshot, deleteDoc, doc } from "firebase/firestore";
-import { signOut } from "firebase/auth";
-import { LangSwitch, useI18n } from "../i18n";
+import { deleteDoc, doc } from "firebase/firestore";
+import { db } from "../firebase";
+import { useI18n } from "../i18n";
+import { useExpenses } from "../useExpenses";
+import { useState } from "react";
 
-function ExpenseList({ homeId, homeName }) {
+function currentMonth() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function ExpenseList({ homeId }) {
   const { t } = useI18n();
+  const { items, user } = useExpenses(homeId);
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
-  function getCurrentMonth() {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  }
+  const grouped = items.reduce((groups, item) => {
+    if (!groups[item.monthKey]) groups[item.monthKey] = [];
+    groups[item.monthKey].push(item);
+    return groups;
+  }, {});
 
-  const [expenses, setExpenses] = useState({});
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribeAuth = auth.onAuthStateChanged((currentUser) => {
-      setUser(currentUser || null);
-    });
-    return () => unsubscribeAuth();
-  }, []);
-
-  useEffect(() => {
-    if (!user || !homeId) return;
-    const expensesRef = collection(db, "homes", homeId, "expenses");
-
-    const unsubscribe = onSnapshot(expensesRef, (snapshot) => {
-      const expenseData = snapshot.docs.map((docSnap) => {
-        const data = docSnap.data();
-
-        let dateObj;
-        if (data.createdAt && data.createdAt.toDate) {
-          dateObj = data.createdAt.toDate();
-        } else if (data.createdAt) {
-          dateObj = new Date(data.createdAt);
-        } else {
-          dateObj = new Date();
-        }
-        const formattedDate = dateObj.toISOString().split("T")[0];
-        const monthKey = formattedDate.substring(0, 7);
-
-        return {
-          id: docSnap.id,
-          description: data.description || "Unknown",
-          amount: data.amount || 0,
-          category: data.category || "Other",
-          type: data.type || "expense",
-          date: formattedDate,
-          monthKey,
-        };
-      });
-
-      const groupedExpenses = expenseData.reduce((acc, expense) => {
-        if (!acc[expense.monthKey]) acc[expense.monthKey] = [];
-        acc[expense.monthKey].push(expense);
-        return acc;
-      }, {});
-      setExpenses(groupedExpenses);
-    });
-
-    return () => unsubscribe();
-  }, [user, homeId]);
+  const monthOptions = [...new Set([...Object.keys(grouped), selectedMonth])].sort((a, b) => b.localeCompare(a));
+  const currentExpenses = grouped[selectedMonth] || [];
+  const totalIncome = currentExpenses.filter((item) => item.type === "income").reduce((sum, item) => sum + item.amount, 0);
+  const totalExpense = currentExpenses.filter((item) => item.type === "expense").reduce((sum, item) => sum + item.amount, 0);
+  const balance = totalIncome - totalExpense;
 
   const handleDelete = async (id) => {
     if (!user || !homeId || !window.confirm(t.deleteConfirm)) return;
@@ -73,43 +35,8 @@ function ExpenseList({ homeId, homeName }) {
     }
   };
 
-  const monthOptions = [...new Set([...Object.keys(expenses), selectedMonth])].sort((a, b) =>
-    b.localeCompare(a)
-  );
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
-  };
-
-  const currentExpenses = expenses[selectedMonth] || [];
-  const totalIncome = currentExpenses
-    .filter((e) => e.type === "income")
-    .reduce((sum, e) => sum + e.amount, 0);
-  const totalExpense = currentExpenses
-    .filter((e) => e.type === "expense")
-    .reduce((sum, e) => sum + e.amount, 0);
-  const balance = totalIncome - totalExpense;
-  const shownHome = !homeName || homeName === "Home" ? t.home : homeName;
-
   return (
-    <section className="budget panel">
-      <div className="panel-head">
-        <div>
-          <h2>{t.transactions}</h2>
-          <p className="home-label">{shownHome}</p>
-        </div>
-        <div className="panel-actions">
-          <LangSwitch variant="inline" />
-          <button className="logout" onClick={handleLogout}>
-            {t.logout}
-          </button>
-        </div>
-      </div>
-
+    <section className="panel">
       <div className="totals">
         <div className="total total-in">
           <span>{t.income}</span>
@@ -127,7 +54,7 @@ function ExpenseList({ homeId, homeName }) {
 
       <label className="month">
         {t.month}
-        <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
+        <select value={selectedMonth} onChange={(event) => setSelectedMonth(event.target.value)}>
           {monthOptions.map((month) => (
             <option key={month} value={month}>
               {month}
@@ -164,7 +91,7 @@ function ExpenseList({ homeId, homeName }) {
                   {exp.amount.toFixed(2)}
                 </td>
                 <td>
-                  <button className="danger" onClick={() => handleDelete(exp.id)}>
+                  <button className="danger" type="button" onClick={() => handleDelete(exp.id)}>
                     {t.delete}
                   </button>
                 </td>

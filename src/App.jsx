@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Auth from "./Components/Auth";
 import ExpenseList from "./Components/ExpenseList";
 import AddExpense from "./Components/AddExpense";
+import Overview from "./Components/Overview";
+import Settings from "./Components/Settings";
 import { auth } from "./firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { ensureHome } from "./ensureHome";
@@ -13,6 +15,7 @@ function App() {
   const [user, loading] = useAuthState(auth);
   const [home, setHome] = useState(null);
   const [homeError, setHomeError] = useState("");
+  const [tab, setTab] = useState("overview");
   const { t } = useI18n();
 
   useEffect(() => {
@@ -47,10 +50,38 @@ function App() {
     return <p className="app-status app-status-error">{homeError}</p>;
   }
 
+  const tabs = [
+    ["overview", t.navOverview],
+    ["month", t.navMonth],
+    ["settings", t.navSettings],
+  ];
+
   return (
     <div className="app-shell">
-      <AddExpense homeId={home.id} />
-      <ExpenseList homeId={home.id} homeName={home.name} />
+      <div className="budget">
+        <nav className="tabs">
+          {tabs.map(([id, label]) => (
+            <button key={id} type="button" className={tab === id ? "active" : ""} onClick={() => setTab(id)}>
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        {tab === "overview" ? <Overview homeId={home.id} /> : null}
+        {tab === "month" ? (
+          <>
+            <AddExpense homeId={home.id} />
+            <ExpenseList homeId={home.id} />
+          </>
+        ) : null}
+        {tab === "settings" ? (
+          <Settings
+            homeId={home.id}
+            homeName={home.name}
+            onRename={(name) => setHome({ ...home, name })}
+          />
+        ) : null}
+      </div>
     </div>
   );
 }
