@@ -1,3 +1,21 @@
+.wait-card {
+  width: min(520px, 100%);
+  margin: 12vh auto 0;
+  background: #fffdfb;
+  border: 1px solid rgba(42, 33, 24, 0.08);
+  border-radius: 20px;
+  padding: 28px;
+}
+
+.wait-card h2 {
+  margin: 0 0 8px;
+}
+
+.wait-card p {
+  margin: 0 0 18px;
+  color: #6b5e52;
+}
+
 .admin-next {
   margin-top: 32px;
 }
@@ -9,4 +27,58 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.admin-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  background: #fffdfb;
+  border: 1px solid rgba(42, 33, 24, 0.08);
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.admin-row strong,
+.admin-row span,
+.admin-row small {
+  display: block;
+}
+
+.admin-row span,
+.admin-row small {
+  color: #6b5e52;
+  font-size: 0.85rem;
+}
+
+.admin-status {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-status.pending {
+  background: #f3d2b3;
+  color: #7c2d12;
+}
+
+.admin-status.approved {
+  background: #e4e0c8;
+  color: #3f6212;
+}
+
+.admin-status.denied {
+  background: #f3d2b3;
+  color: #9a3412;
+}
+
+@media (max-width: 800px) {
+  .admin-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
