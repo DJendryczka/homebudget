@@ -27,8 +27,7 @@ const BUDGET_KEYS = [
   "Pets",
   "Savings",
   "Pension",
-  "Buffer",
-  "Account",
+  "Buffertkonto",
   "Other",
 ];
 
