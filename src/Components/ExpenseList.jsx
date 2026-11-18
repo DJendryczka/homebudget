@@ -4,6 +4,7 @@ import { db } from "../firebase";
 import { useI18n } from "../i18n";
 import { useExpenses } from "../useExpenses";
 import "./../edit-row.css";
+import "../budget-ui.css";
 
 const CATEGORY_KEYS = [
   "Food",
@@ -38,11 +39,14 @@ function EditRow({ exp, onCancel, onSave }) {
   const [amount, setAmount] = useState(String(exp.amount));
   const [category, setCategory] = useState(exp.category);
   const [type, setType] = useState(exp.type);
+  const [date, setDate] = useState(exp.date);
   const options = CATEGORY_KEYS.includes(category) ? CATEGORY_KEYS : [category, ...CATEGORY_KEYS];
 
   return (
     <tr className="edit-row">
-      <td>{exp.date}</td>
+      <td>
+        <input type="date" value={date} onChange={(event) => setDate(event.target.value)} required />
+      </td>
       <td>
         <input value={description} onChange={(event) => setDescription(event.target.value)} required />
       </td>
@@ -81,6 +85,7 @@ function EditRow({ exp, onCancel, onSave }) {
                 amount: Number(amount),
                 category,
                 type,
+                date,
               })
             }
           >
@@ -95,7 +100,7 @@ function EditRow({ exp, onCancel, onSave }) {
   );
 }
 
-function ExpenseList({ homeId }) {
+function ExpenseList({ homeId, budgets = {} }) {
   const { t } = useI18n();
   const { items, user } = useExpenses(homeId);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
@@ -113,6 +118,21 @@ function ExpenseList({ homeId }) {
   const totalExpense = currentExpenses.filter((item) => item.type === "expense").reduce((sum, item) => sum + item.amount, 0);
   const balance = totalIncome - totalExpense;
 
+  const spentByCategory = currentExpenses
+    .filter((item) => item.type === "expense")
+    .reduce((groups, item) => {
+      groups[item.category] = (groups[item.category] || 0) + item.amount;
+      return groups;
+    }, {});
+  const budgetRows = Object.entries(budgets)
+    .filter(([, limit]) => Number(limit) > 0)
+    .map(([key, limit]) => ({
+      key,
+      limit: Number(limit),
+      spent: spentByCategory[key] || 0,
+    }))
+    .sort((a, b) => b.spent / b.limit - a.spent / a.limit);
+
   const handleDelete = async (id) => {
     if (!user || !homeId || !window.confirm(t.deleteConfirm)) return;
     try {
@@ -123,7 +143,7 @@ function ExpenseList({ homeId }) {
   };
 
   const handleSave = async (id, next) => {
-    if (!user || !homeId || !next.description || Number.isNaN(next.amount)) return;
+    if (!user || !homeId || !next.description || !next.date || Number.isNaN(next.amount)) return;
     try {
       await updateDoc(doc(db, "homes", homeId, "expenses", id), next);
       setEditingId(null);
@@ -148,6 +168,29 @@ function ExpenseList({ homeId }) {
           <strong>{balance.toFixed(2)}</strong>
         </div>
       </div>
+
+      {budgetRows.length > 0 ? (
+        <ul className="budget-bars">
+          {budgetRows.map((row) => {
+            const share = row.limit > 0 ? Math.round((row.spent / row.limit) * 100) : 0;
+            const over = row.spent > row.limit;
+            const left = row.limit - row.spent;
+            return (
+              <li key={row.key}>
+                <div className="cat-row">
+                  <span>{t.categories[row.key] || row.key}</span>
+                  <strong className={over ? "money-out" : "budget-meta"}>
+                    {row.spent.toFixed(0)} / {row.limit.toFixed(0)} · {over ? t.over : `${left.toFixed(0)} ${t.remaining}`}
+                  </strong>
+                </div>
+                <div className={`cat-track ${over ? "over" : "ok"}`}>
+                  <span style={{ width: `${Math.min(share, 100)}%` }} />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
 
       <label className="month">
         {t.month}
