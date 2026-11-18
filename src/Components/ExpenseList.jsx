@@ -26,8 +26,7 @@ const CATEGORY_KEYS = [
   "Pets",
   "Savings",
   "Pension",
-  "Buffer",
-  "Account",
+  "Buffertkonto",
   "Salary",
   "Other",
 ];
