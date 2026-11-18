@@ -134,7 +134,7 @@ export const translations = {
     expense: "Expense",
     income: "Income",
     add: "Add",
-    transactions: "Transakcje",
+    transactions: "Transactions",
     home: "Home",
     logout: "Log out",
     expenses: "Expenses",
