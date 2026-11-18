@@ -3,6 +3,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { auth, db } from "./firebase";
 
 function toLocalDate(value) {
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
   const date = value?.toDate ? value.toDate() : value ? new Date(value) : new Date();
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -27,7 +28,7 @@ export function useExpenses(homeId) {
       setItems(
         snapshot.docs.map((docSnap) => {
           const data = docSnap.data();
-          const date = toLocalDate(data.createdAt);
+          const date = toLocalDate(data.date || data.createdAt);
           return {
             id: docSnap.id,
             description: data.description || "Unknown",

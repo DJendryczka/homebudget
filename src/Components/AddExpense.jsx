@@ -25,22 +25,31 @@ const CATEGORY_KEYS = [
   "Other",
 ];
 
+function today() {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
 function AddExpense({ homeId }) {
   const { t } = useI18n();
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food");
   const [type, setType] = useState("expense");
+  const [date, setDate] = useState(today);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!description || !amount || !auth.currentUser || !homeId) return;
+    if (!description || !amount || !date || !auth.currentUser || !homeId) return;
 
     await addDoc(collection(db, "homes", homeId, "expenses"), {
       description,
       amount: parseFloat(amount),
       category,
       type,
+      date,
       createdAt: new Date(),
       createdBy: auth.currentUser.uid,
     });
@@ -49,6 +58,7 @@ function AddExpense({ homeId }) {
     setAmount("");
     setCategory("Food");
     setType("expense");
+    setDate(today());
   };
 
   return (
@@ -81,6 +91,7 @@ function AddExpense({ homeId }) {
           <option value="expense">{t.expense}</option>
           <option value="income">{t.income}</option>
         </select>
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
         <button type="submit">{t.add}</button>
       </div>
     </form>
