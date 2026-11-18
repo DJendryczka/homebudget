@@ -12,6 +12,7 @@ const CATEGORY_KEYS = [
   "Restaurant",
   "Transport",
   "Housing",
+  "Credit",
   "Electricity",
   "Internet",
   "Subscriptions",
