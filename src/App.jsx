@@ -10,6 +10,7 @@ import { ensureHome } from "./ensureHome";
 import { useI18n } from "./i18n";
 import "./App.css";
 import "./budget.css";
+import "./tabs.css";
 
 function App() {
   const [user, loading] = useAuthState(auth);
