@@ -4,23 +4,56 @@ import ExpenseList from "./Components/ExpenseList";
 import AddExpense from "./Components/AddExpense";
 import Overview from "./Components/Overview";
 import Settings from "./Components/Settings";
-import { auth } from "./firebase";
+import AdminPanel from "./Components/AdminPanel";
+import Waiting from "./Components/Waiting";
+import { auth, db } from "./firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { ensureHome } from "./ensureHome";
+import { isSuperAdmin } from "./admin";
 import { useI18n } from "./i18n";
+import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import "./App.css";
 import "./budget.css";
 import "./tabs.css";
+import "./admin.css";
 
 function App() {
   const [user, loading] = useAuthState(auth);
   const [home, setHome] = useState(null);
   const [homeError, setHomeError] = useState("");
+  const [access, setAccess] = useState(null);
   const [tab, setTab] = useState("overview");
   const { t } = useI18n();
+  const admin = isSuperAdmin(user);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || admin) {
+      setAccess(admin ? "approved" : null);
+      return undefined;
+    }
+
+    const ref = doc(db, "accessRequests", user.uid);
+    return onSnapshot(ref, (snap) => {
+      if (!snap.exists()) {
+        setDoc(
+          ref,
+          {
+            email: user.email || "",
+            name: user.displayName || "",
+            status: "pending",
+            requestedAt: serverTimestamp(),
+          },
+          { merge: true }
+        ).catch((error) => console.error("Could not record access request:", error));
+        setAccess("pending");
+        return;
+      }
+      setAccess(snap.data().status || "pending");
+    });
+  }, [user, admin]);
+
+  useEffect(() => {
+    if (!user || access !== "approved") {
       setHome(null);
       setHomeError("");
       return;
@@ -39,16 +72,24 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, [user, t.homeError]);
+  }, [user, access, t.homeError]);
 
-  if (loading || (user && !home && !homeError)) {
+  if (loading || (user && access === null)) {
     return <p className="app-status">{t.opening}</p>;
   }
 
   if (!user) return <Auth />;
 
+  if (access !== "approved") {
+    return <Waiting status={access} />;
+  }
+
   if (homeError) {
     return <p className="app-status app-status-error">{homeError}</p>;
+  }
+
+  if (!home) {
+    return <p className="app-status">{t.opening}</p>;
   }
 
   const tabs = [
@@ -56,6 +97,7 @@ function App() {
     ["month", t.navMonth],
     ["settings", t.navSettings],
   ];
+  if (admin) tabs.push(["admin", t.navAdmin]);
 
   return (
     <div className="app-shell">
@@ -86,6 +128,7 @@ function App() {
             onBudgets={(budgets) => setHome({ ...home, budgets })}
           />
         ) : null}
+        {tab === "admin" && admin ? <AdminPanel /> : null}
       </div>
     </div>
   );
