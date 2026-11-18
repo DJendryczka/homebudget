@@ -3,6 +3,7 @@ import { useI18n } from "../i18n";
 import { useExpenses } from "../useExpenses";
 import "../budget-ui.css";
 import "../compare.css";
+import "../dashboard.css";
 
 const LOCALES = { sv: "sv-SE", pl: "pl-PL", en: "en-GB" };
 
@@ -117,7 +118,7 @@ function Overview({ homeId, homeName, budgets = {} }) {
   const expenseB = sum(sideB, "expense");
 
   return (
-    <section className="panel">
+    <section className="panel dash">
       <div className="panel-head">
         <div>
           <h2>
@@ -145,15 +146,15 @@ function Overview({ homeId, homeName, budgets = {} }) {
       <div className="totals">
         <div className="total total-in">
           <span>{t.income}</span>
-          <strong>{income.toFixed(2)}</strong>
+          <strong>{income.toFixed(0)}</strong>
         </div>
         <div className="total total-out">
           <span>{t.expenses}</span>
-          <strong>{expenses.toFixed(2)}</strong>
+          <strong>{expenses.toFixed(0)}</strong>
         </div>
         <div className={`total ${balance >= 0 ? "total-ok" : "total-bad"}`}>
           <span>{t.balance}</span>
-          <strong>{balance.toFixed(2)}</strong>
+          <strong>{balance.toFixed(0)}</strong>
         </div>
       </div>
 
@@ -173,125 +174,131 @@ function Overview({ homeId, homeName, budgets = {} }) {
         <i className="swatch-out" /> {t.expenses}
       </p>
 
-      <div className="compare">
-        <div className="month-row">
-          <h3>{t.compare}</h3>
-          <p className="home-label">{t.compareHint}</p>
-        </div>
-        <div className="compare-picks">
-          <select className="year-select" value={compareA} onChange={(event) => setCompareA(event.target.value)}>
-            {compareOptions.map((key) => (
-              <option key={key} value={key}>
-                {monthLabel(key, lang)}
-              </option>
-            ))}
-          </select>
-          <span>{t.vs}</span>
-          <select className="year-select" value={compareB} onChange={(event) => setCompareB(event.target.value)}>
-            {compareOptions.map((key) => (
-              <option key={key} value={key}>
-                {monthLabel(key, lang)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="compare-totals">
-          <div>
-            <span>{t.income}</span>
-            <strong>{incomeA.toFixed(0)}</strong>
-            <small>{incomeB.toFixed(0)}</small>
+      <div className="dash-grid">
+        <div className="dash-card">
+          <div className="month-row">
+            <h3>{t.compare}</h3>
+            <div className="compare-picks">
+              <select className="year-select" value={compareA} onChange={(event) => setCompareA(event.target.value)}>
+                {compareOptions.map((key) => (
+                  <option key={key} value={key}>
+                    {monthLabel(key, lang)}
+                  </option>
+                ))}
+              </select>
+              <span>{t.vs}</span>
+              <select className="year-select" value={compareB} onChange={(event) => setCompareB(event.target.value)}>
+                {compareOptions.map((key) => (
+                  <option key={key} value={key}>
+                    {monthLabel(key, lang)}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div>
-            <span>{t.expenses}</span>
-            <strong>{expenseA.toFixed(0)}</strong>
-            <small>{expenseB.toFixed(0)}</small>
+          <div className="compare-totals">
+            <div>
+              <span>{t.income}</span>
+              <strong>{incomeA.toFixed(0)}</strong>
+              <small>{incomeB.toFixed(0)}</small>
+            </div>
+            <div>
+              <span>{t.expenses}</span>
+              <strong>{expenseA.toFixed(0)}</strong>
+              <small>{expenseB.toFixed(0)}</small>
+            </div>
+            <div>
+              <span>{t.difference}</span>
+              <strong className={expenseA - expenseB > 0 ? "money-out" : "money-in"}>
+                {expenseA - expenseB > 0 ? "+" : ""}
+                {(expenseA - expenseB).toFixed(0)}
+              </strong>
+            </div>
           </div>
-          <div>
-            <span>{t.difference}</span>
-            <strong className={expenseA - expenseB > 0 ? "money-out" : "money-in"}>
-              {expenseA - expenseB > 0 ? "+" : ""}
-              {(expenseA - expenseB).toFixed(0)}
-            </strong>
-            <small>{t.expenses}</small>
-          </div>
-        </div>
-        {compareRows.length === 0 ? (
-          <p className="empty">{t.noCompare}</p>
-        ) : (
-          <ul className="compare-list">
-            {compareRows.map((row) => (
-              <li key={row.key}>
-                <span>{t.categories[row.key] || row.key}</span>
-                <strong>{row.a.toFixed(0)}</strong>
-                <strong>{row.b.toFixed(0)}</strong>
-                <strong className={row.diff > 0 ? "money-out" : row.diff < 0 ? "money-in" : ""}>
-                  {row.diff > 0 ? "+" : ""}
-                  {row.diff.toFixed(0)}
-                </strong>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className="month-row">
-        <h3>{t.budgets}</h3>
-        <select className="year-select" value={budgetMonth} onChange={(event) => setBudgetMonth(event.target.value)}>
-          {months.map((month) => (
-            <option key={month.key} value={month.key}>
-              {month.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      {budgetRows.length === 0 ? (
-        <p className="empty">{t.noBudget}</p>
-      ) : (
-        <ul className="budget-bars">
-          {budgetRows.map((row) => {
-            const share = row.limit > 0 ? Math.round((row.spent / row.limit) * 100) : 0;
-            const over = row.spent > row.limit;
-            const left = row.limit - row.spent;
-            return (
-              <li key={row.key}>
-                <div className="cat-row">
+          {compareRows.length === 0 ? (
+            <p className="empty">{t.noCompare}</p>
+          ) : (
+            <ul className="compare-list">
+              {compareRows.map((row) => (
+                <li key={row.key}>
                   <span>{t.categories[row.key] || row.key}</span>
-                  <strong className={over ? "money-out" : "budget-meta"}>
-                    {row.spent.toFixed(0)} / {row.limit.toFixed(0)} · {over ? t.over : `${left.toFixed(0)} ${t.remaining}`}
+                  <strong>{row.a.toFixed(0)}</strong>
+                  <strong>{row.b.toFixed(0)}</strong>
+                  <strong className={row.diff > 0 ? "money-out" : row.diff < 0 ? "money-in" : ""}>
+                    {row.diff > 0 ? "+" : ""}
+                    {row.diff.toFixed(0)}
                   </strong>
-                </div>
-                <div className={`cat-track ${over ? "over" : "ok"}`}>
-                  <span style={{ width: `${Math.min(share, 100)}%` }} />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-      <h3>{t.where}</h3>
-      {categories.length === 0 ? (
-        <p className="empty">{t.noYear}</p>
-      ) : (
-        <ul className="cats">
-          {categories.map((category) => {
-            const share = expenses > 0 ? Math.round((category.amount / expenses) * 100) : 0;
-            return (
-              <li key={category.key}>
-                <div className="cat-row">
-                  <span>{t.categories[category.key] || category.key}</span>
-                  <strong>
-                    {category.amount.toFixed(2)} · {share}%
-                  </strong>
-                </div>
-                <div className="cat-track">
-                  <span style={{ width: `${share}%` }} />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+        <div className="dash-stack">
+          <div className="dash-card">
+            <div className="month-row">
+              <h3>{t.budgets}</h3>
+              <select className="year-select" value={budgetMonth} onChange={(event) => setBudgetMonth(event.target.value)}>
+                {months.map((month) => (
+                  <option key={month.key} value={month.key}>
+                    {month.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {budgetRows.length === 0 ? (
+              <p className="empty">{t.noBudget}</p>
+            ) : (
+              <ul className="budget-bars">
+                {budgetRows.map((row) => {
+                  const share = row.limit > 0 ? Math.round((row.spent / row.limit) * 100) : 0;
+                  const over = row.spent > row.limit;
+                  const left = row.limit - row.spent;
+                  return (
+                    <li key={row.key}>
+                      <div className="cat-row">
+                        <span>{t.categories[row.key] || row.key}</span>
+                        <strong className={over ? "money-out" : "budget-meta"}>
+                          {row.spent.toFixed(0)} / {row.limit.toFixed(0)} · {over ? t.over : `${left.toFixed(0)} ${t.remaining}`}
+                        </strong>
+                      </div>
+                      <div className={`cat-track ${over ? "over" : "ok"}`}>
+                        <span style={{ width: `${Math.min(share, 100)}%` }} />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
+          <div className="dash-card">
+            <h3>{t.where}</h3>
+            {categories.length === 0 ? (
+              <p className="empty">{t.noYear}</p>
+            ) : (
+              <ul className="cats">
+                {categories.map((category) => {
+                  const share = expenses > 0 ? Math.round((category.amount / expenses) * 100) : 0;
+                  return (
+                    <li key={category.key}>
+                      <div className="cat-row">
+                        <span>{t.categories[category.key] || category.key}</span>
+                        <strong>
+                          {category.amount.toFixed(0)} · {share}%
+                        </strong>
+                      </div>
+                      <div className="cat-track">
+                        <span style={{ width: `${share}%` }} />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
