@@ -44,6 +44,8 @@ export const translations = {
     homeName: "Hemmets namn",
     save: "Spara",
     saved: "Sparat.",
+    saveError: "Kunde inte spara.",
+    overviewOf: "Översikt av",
     categories: {
       Food: "Mat",
       Transport: "Transport",
@@ -97,6 +99,8 @@ export const translations = {
     homeName: "Nazwa domu",
     save: "Zapisz",
     saved: "Zapisano.",
+    saveError: "Nie udało się zapisać.",
+    overviewOf: "Przegląd domu",
     categories: {
       Food: "Jedzenie",
       Transport: "Transport",
@@ -150,6 +154,8 @@ export const translations = {
     homeName: "Home name",
     save: "Save",
     saved: "Saved.",
+    saveError: "Could not save.",
+    overviewOf: "Overview of",
     categories: {
       Food: "Food",
       Transport: "Transport",
