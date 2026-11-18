@@ -13,7 +13,7 @@ function Settings({ homeId, homeName, onRename }) {
   const { t } = useI18n();
   const [name, setName] = useState(homeName && homeName !== "Home" ? homeName : "");
   const [status, setStatus] = useState("idle");
-  const [toast, setToast] = useState("");
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     if (status === "saving") return;
@@ -21,13 +21,18 @@ function Settings({ homeId, homeName, onRename }) {
   }, [homeName, status]);
 
   useEffect(() => {
-    if (!toast) return undefined;
+    if (!notice) return undefined;
     const timer = setTimeout(() => {
-      setToast("");
+      setNotice("");
       setStatus("idle");
     }, 4000);
     return () => clearTimeout(timer);
-  }, [toast]);
+  }, [notice]);
+
+  const closeNotice = () => {
+    setNotice("");
+    setStatus("idle");
+  };
 
   const saveName = async (event) => {
     event.preventDefault();
@@ -35,7 +40,7 @@ function Settings({ homeId, homeName, onRename }) {
     if (!next || status === "saving") return;
 
     setStatus("saving");
-    setToast("");
+    setNotice("");
     const started = Date.now();
     let ok = false;
 
@@ -49,7 +54,7 @@ function Settings({ homeId, homeName, onRename }) {
 
     await wait(Math.max(0, 2000 - (Date.now() - started)));
     setStatus(ok ? "success" : "error");
-    setToast(ok ? t.saved : t.saveError);
+    setNotice(ok ? t.saved : t.saveError);
   };
 
   return (
@@ -89,17 +94,22 @@ function Settings({ homeId, homeName, onRename }) {
 
       {status === "saving"
         ? createPortal(
-            <div className="save-overlay" role="status" aria-live="polite">
+            <div className="save-overlay">
               <div className="spinner" />
             </div>,
             document.body
           )
         : null}
 
-      {toast
+      {notice
         ? createPortal(
-            <div className={`toast ${status}`} role="status">
-              {toast}
+            <div className="save-overlay" onClick={closeNotice}>
+              <div className={`save-notice ${status}`} role="status" onClick={(event) => event.stopPropagation()}>
+                <p>{notice}</p>
+                <button type="button" onClick={closeNotice}>
+                  OK
+                </button>
+              </div>
             </div>,
             document.body
           )
