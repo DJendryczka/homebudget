@@ -15,7 +15,7 @@ function Settings({ homeId, homeName, onRename }) {
 
   useEffect(() => {
     if (!toast) return undefined;
-    const timer = setTimeout(() => setToast(""), 2400);
+    const timer = setTimeout(() => setToast(""), 4000);
     return () => clearTimeout(timer);
   }, [toast]);
 
@@ -65,7 +65,11 @@ function Settings({ homeId, homeName, onRename }) {
         {t.logout}
       </button>
 
-      {toast ? <div className="toast" role="status">{toast}</div> : null}
+      {toast ? (
+        <div className="toast" role="status">
+          {toast}
+        </div>
+      ) : null}
     </section>
   );
 }
