@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase";
@@ -6,16 +6,31 @@ import { LangSwitch, useI18n } from "../i18n";
 
 function Settings({ homeId, homeName, onRename }) {
   const { t } = useI18n();
-  const [name, setName] = useState(homeName === "Home" ? "" : homeName || "");
-  const [saved, setSaved] = useState(false);
+  const [name, setName] = useState(homeName && homeName !== "Home" ? homeName : "");
+  const [toast, setToast] = useState("");
+
+  useEffect(() => {
+    setName(homeName && homeName !== "Home" ? homeName : "");
+  }, [homeName]);
+
+  useEffect(() => {
+    if (!toast) return undefined;
+    const timer = setTimeout(() => setToast(""), 2400);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   const saveName = async (event) => {
     event.preventDefault();
     const next = name.trim();
     if (!next) return;
-    await updateDoc(doc(db, "homes", homeId), { name: next });
-    onRename(next);
-    setSaved(true);
+    try {
+      await updateDoc(doc(db, "homes", homeId), { name: next });
+      onRename(next);
+      setToast(t.saved);
+    } catch (error) {
+      console.error("Could not save home name:", error);
+      setToast(t.saveError);
+    }
   };
 
   return (
@@ -34,14 +49,10 @@ function Settings({ homeId, homeName, onRename }) {
             id="home-name"
             value={name}
             placeholder={t.home}
-            onChange={(event) => {
-              setName(event.target.value);
-              setSaved(false);
-            }}
+            onChange={(event) => setName(event.target.value)}
           />
           <button type="submit">{t.save}</button>
         </div>
-        {saved ? <p className="saved">{t.saved}</p> : null}
       </form>
 
       <button
@@ -53,6 +64,8 @@ function Settings({ homeId, homeName, onRename }) {
       >
         {t.logout}
       </button>
+
+      {toast ? <div className="toast" role="status">{toast}</div> : null}
     </section>
   );
 }

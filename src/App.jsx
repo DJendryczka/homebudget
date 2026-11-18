@@ -68,7 +68,7 @@ function App() {
           ))}
         </nav>
 
-        {tab === "overview" ? <Overview homeId={home.id} /> : null}
+        {tab === "overview" ? <Overview homeId={home.id} homeName={home.name} /> : null}
         {tab === "month" ? (
           <>
             <AddExpense homeId={home.id} />

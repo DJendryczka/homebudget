@@ -8,11 +8,12 @@ function sum(list, type) {
   return list.filter((item) => item.type === type).reduce((total, item) => total + item.amount, 0);
 }
 
-function Overview({ homeId }) {
+function Overview({ homeId, homeName }) {
   const { lang, t } = useI18n();
   const { items } = useExpenses(homeId);
   const currentYear = String(new Date().getFullYear());
   const [year, setYear] = useState(currentYear);
+  const shownName = !homeName || homeName === "Home" ? t.home : homeName;
 
   const years = useMemo(() => {
     const found = items.map((item) => item.year);
@@ -51,7 +52,9 @@ function Overview({ homeId }) {
     <section className="panel">
       <div className="panel-head">
         <div>
-          <h2>{t.navOverview}</h2>
+          <h2>
+            {t.overviewOf} {shownName}
+          </h2>
           <p className="home-label">{t.year}</p>
         </div>
         <select className="year-select" value={year} onChange={(event) => setYear(event.target.value)}>
