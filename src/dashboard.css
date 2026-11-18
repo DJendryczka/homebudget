@@ -4,29 +4,34 @@
 
 .dash-top {
   display: grid;
-  grid-template-columns: 0.85fr 1.15fr;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-bottom: 12px;
   align-items: stretch;
 }
 
-.dash-top .totals {
-  grid-template-columns: 1fr;
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin: 0;
+  height: 100%;
 }
 
-.dash .total {
+.dash .total,
+.pot {
   padding: 8px 12px;
   border-radius: 12px;
+  min-height: 62px;
 }
 
-.dash .total strong {
+.dash .total strong,
+.pot strong {
+  display: block;
   font-size: 1.15rem;
 }
 
 .dash .year-chart {
-  height: 120px;
+  height: 160px;
   margin: 4px 0 2px;
 }
 
@@ -35,31 +40,26 @@
   font-size: 0.75rem;
 }
 
-.pots {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.pot {
-  background: #f7f3ee;
-  border-radius: 12px;
-  padding: 8px 10px;
-}
-
 .pot span {
   display: block;
-  color: #8a7968;
   font-size: 0.68rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.pot strong {
-  display: block;
-  margin-top: 2px;
-  font-size: 1rem;
+.pot-savings {
+  background: #d7efe4;
+  color: #1f6b4a;
+}
+
+.pot-pension {
+  background: #efe4c8;
+  color: #7a5b12;
+}
+
+.pot-buffer {
+  background: #dce6f2;
+  color: #2f4f75;
 }
 
 .dash-grid {
@@ -119,9 +119,5 @@
   .dash-top,
   .dash-grid {
     grid-template-columns: 1fr;
-  }
-
-  .dash-top .totals {
-    grid-template-columns: repeat(3, 1fr);
   }
 }
