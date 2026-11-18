@@ -4,6 +4,7 @@ import "./index.css";
 import App from "./App.jsx";
 import { LanguageProvider } from "./i18n.jsx";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "./buttons.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

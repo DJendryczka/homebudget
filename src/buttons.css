@@ -1,0 +1,74 @@
+button {
+  transition: transform 0.12s ease, background-color 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+button:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+button:focus-visible {
+  outline: 3px solid #c46b3a;
+  outline-offset: 3px;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.94);
+  filter: brightness(0.86);
+}
+
+.entry button:hover:not(:disabled),
+.name-row button:hover:not(:disabled),
+.save-notice button:hover:not(:disabled),
+.google-btn:hover {
+  background: #1a140f;
+  box-shadow: 0 8px 18px rgba(42, 33, 24, 0.18);
+}
+
+.entry button:active:not(:disabled),
+.name-row button:active:not(:disabled),
+.save-notice button:active:not(:disabled),
+.google-btn:active {
+  background: #c46b3a;
+  color: #fffaf6;
+  box-shadow: inset 0 3px 8px rgba(42, 33, 24, 0.35);
+}
+
+.name-row button.success {
+  background: #3f6212;
+}
+
+.name-row button.error {
+  background: #9a3412;
+}
+
+.tabs button:hover:not(.active) {
+  background: rgba(42, 33, 24, 0.08);
+  color: #2a2118;
+}
+
+.tabs button:active {
+  background: #c46b3a;
+  color: #fffaf6;
+}
+
+.lang-inline button:hover:not(.active),
+.lang-switcher button:hover:not(.active) {
+  background: rgba(42, 33, 24, 0.08);
+}
+
+.lang-inline button:active,
+.lang-switcher button:active {
+  background: #c46b3a;
+  color: #fffaf6;
+}
+
+.logout:hover,
+.danger:hover {
+  background: rgba(42, 33, 24, 0.06);
+}
+
+.logout:active,
+.danger:active {
+  background: #2a2118;
+  color: #f7f3ee;
+}
