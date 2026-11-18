@@ -1,0 +1,80 @@
+.compare {
+  margin: 8px 0 28px;
+}
+
+.compare-picks {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 10px 0 14px;
+}
+
+.compare-picks span {
+  color: #8a7968;
+  font-size: 0.85rem;
+}
+
+.compare-totals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.compare-totals div {
+  background: #fffdfb;
+  border: 1px solid rgba(42, 33, 24, 0.08);
+  border-radius: 16px;
+  padding: 12px 14px;
+}
+
+.compare-totals span,
+.compare-totals small {
+  display: block;
+  color: #8a7968;
+  font-size: 0.75rem;
+}
+
+.compare-totals strong {
+  display: block;
+  margin: 4px 0;
+  font-size: 1.2rem;
+}
+
+.compare-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.compare-list li {
+  display: grid;
+  grid-template-columns: 1.4fr 0.7fr 0.7fr 0.7fr;
+  gap: 8px;
+  align-items: center;
+  background: #fffdfb;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.compare-list strong {
+  text-align: right;
+}
+
+@media (max-width: 800px) {
+  .compare-totals {
+    grid-template-columns: 1fr;
+  }
+
+  .compare-list li {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .compare-list span {
+    grid-column: 1 / -1;
+  }
+}
