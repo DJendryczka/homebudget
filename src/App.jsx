@@ -68,18 +68,22 @@ function App() {
           ))}
         </nav>
 
-        {tab === "overview" ? <Overview homeId={home.id} homeName={home.name} /> : null}
+        {tab === "overview" ? (
+          <Overview homeId={home.id} homeName={home.name} budgets={home.budgets || {}} />
+        ) : null}
         {tab === "month" ? (
           <>
             <AddExpense homeId={home.id} />
-            <ExpenseList homeId={home.id} />
+            <ExpenseList homeId={home.id} budgets={home.budgets || {}} />
           </>
         ) : null}
         {tab === "settings" ? (
           <Settings
             homeId={home.id}
             homeName={home.name}
+            budgets={home.budgets || {}}
             onRename={(name) => setHome({ ...home, name })}
+            onBudgets={(budgets) => setHome({ ...home, budgets })}
           />
         ) : null}
       </div>
