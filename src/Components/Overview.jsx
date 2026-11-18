@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useI18n } from "../i18n";
 import { useExpenses } from "../useExpenses";
+import "../budget-ui.css";
 
 const LOCALES = { sv: "sv-SE", pl: "pl-PL", en: "en-GB" };
 
@@ -8,11 +9,18 @@ function sum(list, type) {
   return list.filter((item) => item.type === type).reduce((total, item) => total + item.amount, 0);
 }
 
-function Overview({ homeId, homeName }) {
+function currentMonthKey(year) {
+  const now = new Date();
+  const month = year === String(now.getFullYear()) ? now.getMonth() + 1 : 1;
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
+function Overview({ homeId, homeName, budgets = {} }) {
   const { lang, t } = useI18n();
   const { items } = useExpenses(homeId);
   const currentYear = String(new Date().getFullYear());
   const [year, setYear] = useState(currentYear);
+  const [budgetMonth, setBudgetMonth] = useState(() => currentMonthKey(currentYear));
   const shownName = !homeName || homeName === "Home" ? t.home : homeName;
 
   const years = useMemo(() => {
@@ -48,6 +56,20 @@ function Overview({ homeId, homeName }) {
       }, {})
   ).sort((a, b) => b.amount - a.amount);
 
+  const monthItems = items.filter((item) => item.monthKey === budgetMonth && item.type === "expense");
+  const spentByCategory = monthItems.reduce((groups, item) => {
+    groups[item.category] = (groups[item.category] || 0) + item.amount;
+    return groups;
+  }, {});
+  const budgetRows = Object.entries(budgets)
+    .filter(([, limit]) => Number(limit) > 0)
+    .map(([key, limit]) => ({
+      key,
+      limit: Number(limit),
+      spent: spentByCategory[key] || 0,
+    }))
+    .sort((a, b) => b.spent / b.limit - a.spent / a.limit);
+
   return (
     <section className="panel">
       <div className="panel-head">
@@ -57,7 +79,15 @@ function Overview({ homeId, homeName }) {
           </h2>
           <p className="home-label">{t.year}</p>
         </div>
-        <select className="year-select" value={year} onChange={(event) => setYear(event.target.value)}>
+        <select
+          className="year-select"
+          value={year}
+          onChange={(event) => {
+            const nextYear = event.target.value;
+            setYear(nextYear);
+            setBudgetMonth(currentMonthKey(nextYear));
+          }}
+        >
           {years.map((value) => (
             <option key={value} value={value}>
               {value}
@@ -96,6 +126,41 @@ function Overview({ homeId, homeName }) {
         <i className="swatch-in" /> {t.income}
         <i className="swatch-out" /> {t.expenses}
       </p>
+
+      <div className="month-row">
+        <h3>{t.budgets}</h3>
+        <select className="year-select" value={budgetMonth} onChange={(event) => setBudgetMonth(event.target.value)}>
+          {months.map((month) => (
+            <option key={month.key} value={month.key}>
+              {month.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      {budgetRows.length === 0 ? (
+        <p className="empty">{t.noBudget}</p>
+      ) : (
+        <ul className="budget-bars">
+          {budgetRows.map((row) => {
+            const share = row.limit > 0 ? Math.round((row.spent / row.limit) * 100) : 0;
+            const over = row.spent > row.limit;
+            const left = row.limit - row.spent;
+            return (
+              <li key={row.key}>
+                <div className="cat-row">
+                  <span>{t.categories[row.key] || row.key}</span>
+                  <strong className={over ? "money-out" : "budget-meta"}>
+                    {row.spent.toFixed(0)} / {row.limit.toFixed(0)} · {over ? t.over : `${left.toFixed(0)} ${t.remaining}`}
+                  </strong>
+                </div>
+                <div className={`cat-track ${over ? "over" : "ok"}`}>
+                  <span style={{ width: `${Math.min(share, 100)}%` }} />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       <h3>{t.where}</h3>
       {categories.length === 0 ? (

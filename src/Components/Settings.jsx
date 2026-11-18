@@ -5,14 +5,43 @@ import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { LangSwitch, useI18n } from "../i18n";
 import "../save-notice.css";
+import "../budget-ui.css";
+
+const BUDGET_KEYS = [
+  "Food",
+  "Sweets",
+  "Phone",
+  "Restaurant",
+  "Transport",
+  "Housing",
+  "Credit",
+  "Electricity",
+  "Internet",
+  "Subscriptions",
+  "Clothes",
+  "Health",
+  "Kids",
+  "Insurance",
+  "Entertainment",
+  "Gifts",
+  "Pets",
+  "Other",
+];
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function Settings({ homeId, homeName, onRename }) {
+function fromBudgets(budgets) {
+  return Object.fromEntries(
+    BUDGET_KEYS.map((key) => [key, budgets?.[key] ? String(budgets[key]) : ""])
+  );
+}
+
+function Settings({ homeId, homeName, budgets, onRename, onBudgets }) {
   const { t } = useI18n();
   const [name, setName] = useState(homeName && homeName !== "Home" ? homeName : "");
+  const [limits, setLimits] = useState(() => fromBudgets(budgets));
   const [status, setStatus] = useState("idle");
   const [notice, setNotice] = useState("");
 
@@ -20,6 +49,11 @@ function Settings({ homeId, homeName, onRename }) {
     if (status === "saving") return;
     setName(homeName && homeName !== "Home" ? homeName : "");
   }, [homeName, status]);
+
+  useEffect(() => {
+    if (status === "saving") return;
+    setLimits(fromBudgets(budgets));
+  }, [budgets, status]);
 
   useEffect(() => {
     if (!notice) return undefined;
@@ -33,6 +67,12 @@ function Settings({ homeId, homeName, onRename }) {
   const closeNotice = () => {
     setNotice("");
     setStatus("idle");
+  };
+
+  const finish = async (started, ok, message) => {
+    await wait(Math.max(0, 2000 - (Date.now() - started)));
+    setStatus(ok ? "success" : "error");
+    setNotice(message);
   };
 
   const saveName = async (event) => {
@@ -53,9 +93,33 @@ function Settings({ homeId, homeName, onRename }) {
       console.error("Could not save home name:", error);
     }
 
-    await wait(Math.max(0, 2000 - (Date.now() - started)));
-    setStatus(ok ? "success" : "error");
-    setNotice(ok ? t.saved : t.saveError);
+    await finish(started, ok, ok ? t.saved : t.saveError);
+  };
+
+  const saveBudgets = async (event) => {
+    event.preventDefault();
+    if (status === "saving") return;
+
+    const next = {};
+    BUDGET_KEYS.forEach((key) => {
+      const value = Number(limits[key]);
+      if (limits[key] !== "" && !Number.isNaN(value) && value > 0) next[key] = value;
+    });
+
+    setStatus("saving");
+    setNotice("");
+    const started = Date.now();
+    let ok = false;
+
+    try {
+      await setDoc(doc(db, "homes", homeId), { budgets: next }, { merge: true });
+      onBudgets(next);
+      ok = true;
+    } catch (error) {
+      console.error("Could not save budgets:", error);
+    }
+
+    await finish(started, ok, ok ? t.budgetsSaved : t.saveError);
   };
 
   return (
@@ -81,6 +145,30 @@ function Settings({ homeId, homeName, onRename }) {
             {status === "saving" ? t.saving : t.save}
           </button>
         </div>
+      </form>
+
+      <form className="setting" onSubmit={saveBudgets}>
+        <label>{t.budgets}</label>
+        <p className="home-label">{t.budgetHint}</p>
+        <div className="budget-form">
+          {BUDGET_KEYS.map((key) => (
+            <label className="budget-line" key={key}>
+              <span>{t.categories[key] || key}</span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={limits[key] || ""}
+                placeholder="0"
+                disabled={status === "saving"}
+                onChange={(event) => setLimits({ ...limits, [key]: event.target.value })}
+              />
+            </label>
+          ))}
+        </div>
+        <button type="submit" className={status} disabled={status === "saving"}>
+          {status === "saving" ? t.saving : t.save}
+        </button>
       </form>
 
       <button
