@@ -2,11 +2,16 @@ import { useMemo, useState } from "react";
 import { useI18n } from "../i18n";
 import { useExpenses } from "../useExpenses";
 import "../budget-ui.css";
+import "../compare.css";
 
 const LOCALES = { sv: "sv-SE", pl: "pl-PL", en: "en-GB" };
 
 function sum(list, type) {
   return list.filter((item) => item.type === type).reduce((total, item) => total + item.amount, 0);
+}
+
+function monthKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
 function currentMonthKey(year) {
@@ -15,12 +20,35 @@ function currentMonthKey(year) {
   return `${year}-${String(month).padStart(2, "0")}`;
 }
 
+function previousMonthKey(key) {
+  const [year, month] = key.split("-").map(Number);
+  const date = new Date(year, month - 2, 1);
+  return monthKey(date);
+}
+
+function monthLabel(key, lang) {
+  const [year, month] = key.split("-").map(Number);
+  return new Date(year, month - 1, 1).toLocaleString(LOCALES[lang], { month: "short", year: "numeric" });
+}
+
+function spentByCategory(list) {
+  return list
+    .filter((item) => item.type === "expense")
+    .reduce((groups, item) => {
+      groups[item.category] = (groups[item.category] || 0) + item.amount;
+      return groups;
+    }, {});
+}
+
 function Overview({ homeId, homeName, budgets = {} }) {
   const { lang, t } = useI18n();
   const { items } = useExpenses(homeId);
   const currentYear = String(new Date().getFullYear());
+  const nowKey = monthKey(new Date());
   const [year, setYear] = useState(currentYear);
   const [budgetMonth, setBudgetMonth] = useState(() => currentMonthKey(currentYear));
+  const [compareA, setCompareA] = useState(nowKey);
+  const [compareB, setCompareB] = useState(previousMonthKey(nowKey));
   const shownName = !homeName || homeName === "Home" ? t.home : homeName;
 
   const years = useMemo(() => {
@@ -57,18 +85,36 @@ function Overview({ homeId, homeName, budgets = {} }) {
   ).sort((a, b) => b.amount - a.amount);
 
   const monthItems = items.filter((item) => item.monthKey === budgetMonth && item.type === "expense");
-  const spentByCategory = monthItems.reduce((groups, item) => {
-    groups[item.category] = (groups[item.category] || 0) + item.amount;
-    return groups;
-  }, {});
+  const spentByBudget = spentByCategory(monthItems);
   const budgetRows = Object.entries(budgets)
     .filter(([, limit]) => Number(limit) > 0)
     .map(([key, limit]) => ({
       key,
       limit: Number(limit),
-      spent: spentByCategory[key] || 0,
+      spent: spentByBudget[key] || 0,
     }))
     .sort((a, b) => b.spent / b.limit - a.spent / a.limit);
+
+  const compareOptions = useMemo(() => {
+    const found = items.map((item) => item.monthKey);
+    return [...new Set([nowKey, previousMonthKey(nowKey), ...found])].sort((a, b) => b.localeCompare(a));
+  }, [items, nowKey]);
+
+  const sideA = items.filter((item) => item.monthKey === compareA);
+  const sideB = items.filter((item) => item.monthKey === compareB);
+  const catsA = spentByCategory(sideA);
+  const catsB = spentByCategory(sideB);
+  const compareRows = [...new Set([...Object.keys(catsA), ...Object.keys(catsB)])]
+    .map((key) => {
+      const a = catsA[key] || 0;
+      const b = catsB[key] || 0;
+      return { key, a, b, diff: a - b };
+    })
+    .sort((left, right) => Math.abs(right.diff) - Math.abs(left.diff));
+  const incomeA = sum(sideA, "income");
+  const incomeB = sum(sideB, "income");
+  const expenseA = sum(sideA, "expense");
+  const expenseB = sum(sideB, "expense");
 
   return (
     <section className="panel">
@@ -126,6 +172,67 @@ function Overview({ homeId, homeName, budgets = {} }) {
         <i className="swatch-in" /> {t.income}
         <i className="swatch-out" /> {t.expenses}
       </p>
+
+      <div className="compare">
+        <div className="month-row">
+          <h3>{t.compare}</h3>
+          <p className="home-label">{t.compareHint}</p>
+        </div>
+        <div className="compare-picks">
+          <select className="year-select" value={compareA} onChange={(event) => setCompareA(event.target.value)}>
+            {compareOptions.map((key) => (
+              <option key={key} value={key}>
+                {monthLabel(key, lang)}
+              </option>
+            ))}
+          </select>
+          <span>{t.vs}</span>
+          <select className="year-select" value={compareB} onChange={(event) => setCompareB(event.target.value)}>
+            {compareOptions.map((key) => (
+              <option key={key} value={key}>
+                {monthLabel(key, lang)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="compare-totals">
+          <div>
+            <span>{t.income}</span>
+            <strong>{incomeA.toFixed(0)}</strong>
+            <small>{incomeB.toFixed(0)}</small>
+          </div>
+          <div>
+            <span>{t.expenses}</span>
+            <strong>{expenseA.toFixed(0)}</strong>
+            <small>{expenseB.toFixed(0)}</small>
+          </div>
+          <div>
+            <span>{t.difference}</span>
+            <strong className={expenseA - expenseB > 0 ? "money-out" : "money-in"}>
+              {expenseA - expenseB > 0 ? "+" : ""}
+              {(expenseA - expenseB).toFixed(0)}
+            </strong>
+            <small>{t.expenses}</small>
+          </div>
+        </div>
+        {compareRows.length === 0 ? (
+          <p className="empty">{t.noCompare}</p>
+        ) : (
+          <ul className="compare-list">
+            {compareRows.map((row) => (
+              <li key={row.key}>
+                <span>{t.categories[row.key] || row.key}</span>
+                <strong>{row.a.toFixed(0)}</strong>
+                <strong>{row.b.toFixed(0)}</strong>
+                <strong className={row.diff > 0 ? "money-out" : row.diff < 0 ? "money-in" : ""}>
+                  {row.diff > 0 ? "+" : ""}
+                  {row.diff.toFixed(0)}
+                </strong>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <div className="month-row">
         <h3>{t.budgets}</h3>
