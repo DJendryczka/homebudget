@@ -1,36 +1,55 @@
 import { useEffect, useState } from "react";
-import { doc, updateDoc } from "firebase/firestore";
+import { createPortal } from "react-dom";
+import { doc, setDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { LangSwitch, useI18n } from "../i18n";
 
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function Settings({ homeId, homeName, onRename }) {
   const { t } = useI18n();
   const [name, setName] = useState(homeName && homeName !== "Home" ? homeName : "");
+  const [status, setStatus] = useState("idle");
   const [toast, setToast] = useState("");
 
   useEffect(() => {
+    if (status === "saving") return;
     setName(homeName && homeName !== "Home" ? homeName : "");
-  }, [homeName]);
+  }, [homeName, status]);
 
   useEffect(() => {
     if (!toast) return undefined;
-    const timer = setTimeout(() => setToast(""), 4000);
+    const timer = setTimeout(() => {
+      setToast("");
+      setStatus("idle");
+    }, 4000);
     return () => clearTimeout(timer);
   }, [toast]);
 
   const saveName = async (event) => {
     event.preventDefault();
     const next = name.trim();
-    if (!next) return;
+    if (!next || status === "saving") return;
+
+    setStatus("saving");
+    setToast("");
+    const started = Date.now();
+    let ok = false;
+
     try {
-      await updateDoc(doc(db, "homes", homeId), { name: next });
+      await setDoc(doc(db, "homes", homeId), { name: next }, { merge: true });
       onRename(next);
-      setToast(t.saved);
+      ok = true;
     } catch (error) {
       console.error("Could not save home name:", error);
-      setToast(t.saveError);
     }
+
+    await wait(Math.max(0, 2000 - (Date.now() - started)));
+    setStatus(ok ? "success" : "error");
+    setToast(ok ? t.saved : t.saveError);
   };
 
   return (
@@ -49,9 +68,12 @@ function Settings({ homeId, homeName, onRename }) {
             id="home-name"
             value={name}
             placeholder={t.home}
+            disabled={status === "saving"}
             onChange={(event) => setName(event.target.value)}
           />
-          <button type="submit">{t.save}</button>
+          <button type="submit" className={status} disabled={status === "saving"}>
+            {status === "saving" ? t.saving : t.save}
+          </button>
         </div>
       </form>
 
@@ -65,11 +87,23 @@ function Settings({ homeId, homeName, onRename }) {
         {t.logout}
       </button>
 
-      {toast ? (
-        <div className="toast" role="status">
-          {toast}
-        </div>
-      ) : null}
+      {status === "saving"
+        ? createPortal(
+            <div className="save-overlay" role="status" aria-live="polite">
+              <div className="spinner" />
+            </div>,
+            document.body
+          )
+        : null}
+
+      {toast
+        ? createPortal(
+            <div className={`toast ${status}`} role="status">
+              {toast}
+            </div>,
+            document.body
+          )
+        : null}
     </section>
   );
 }
