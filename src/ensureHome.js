@@ -11,6 +11,15 @@ import {
 
 const pending = new Map();
 
+function homeFromSnap(id, snap) {
+  const data = snap.exists() ? snap.data() : {};
+  return {
+    id,
+    name: data.name || "Home",
+    budgets: data.budgets || {},
+  };
+}
+
 async function copyOldExpenses(uid, homeId) {
   const oldSnap = await getDocs(collection(db, "users", uid, "expenses"));
   if (oldSnap.empty) return;
@@ -45,10 +54,7 @@ async function ensureHomeOnce(user) {
       await setDoc(userRef, { migrated: true }, { merge: true });
     }
     const homeSnap = await getDoc(doc(db, "homes", existing.homeId));
-    return {
-      id: existing.homeId,
-      name: homeSnap.exists() ? homeSnap.data().name || "Home" : "Home",
-    };
+    return homeFromSnap(existing.homeId, homeSnap);
   }
 
   const homeRef = doc(collection(db, "homes"));
@@ -60,6 +66,7 @@ async function ensureHomeOnce(user) {
     name,
     ownerUid: user.uid,
     createdAt: serverTimestamp(),
+    budgets: {},
   });
   batch.set(doc(db, "homes", homeId, "members", user.uid), {
     role: "owner",
@@ -78,7 +85,7 @@ async function ensureHomeOnce(user) {
   await copyOldExpenses(user.uid, homeId);
   await setDoc(userRef, { migrated: true }, { merge: true });
 
-  return { id: homeId, name };
+  return { id: homeId, name, budgets: {} };
 }
 
 export function ensureHome(user) {
