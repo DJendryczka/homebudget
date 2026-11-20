@@ -1,0 +1,261 @@
+/* ---------- Shared ---------- */
+button.primary {
+  border: none;
+  background: #2a2118;
+  color: #f7f3ee;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+button.primary.small {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+button.primary:disabled,
+.due .quiet:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.recurring-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.recurring-main strong {
+  overflow-wrap: anywhere;
+}
+
+.recurring-main span {
+  font-size: 0.8rem;
+  color: #8a7968;
+}
+
+/* ---------- Settings: list + form ---------- */
+.recurring-empty {
+  margin: 4px 0;
+  color: #8a7968;
+}
+
+.recurring-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recurring-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #fffdfb;
+  border: 1px solid rgba(42, 33, 24, 0.08);
+  border-radius: 14px;
+}
+
+.recurring-list li.editing {
+  border-color: #c46b3a;
+  background: #fbf3ec;
+}
+
+.recurring-amount {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.recurring-form {
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr 0.9fr 0.7fr 0.45fr auto;
+  gap: 10px;
+  align-items: end;
+  margin-top: 8px;
+}
+
+.recurring-form input,
+.recurring-form select {
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  border: 1px solid rgba(42, 33, 24, 0.14);
+  background: #fff;
+  color: #2a2118;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.recurring-day {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recurring-day span {
+  font-size: 0.72rem;
+  color: #8a7968;
+}
+
+.recurring-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.recurring-buttons button {
+  height: 46px;
+}
+
+/* ---------- Month: "To add" card ---------- */
+.due {
+  margin-bottom: 18px;
+  padding: 16px;
+  background: #fbf3ec;
+  border: 1px solid rgba(196, 107, 58, 0.3);
+  border-radius: 18px;
+}
+
+.due-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.due-head h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.due-head p {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  color: #8a7968;
+}
+
+.due-count {
+  display: inline-block;
+  min-width: 22px;
+  margin-left: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #c46b3a;
+  color: #fffaf6;
+  font-size: 0.75rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.due-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.due-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #fffdfb;
+  border-radius: 12px;
+}
+
+.due-amount {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+}
+
+.due-amount input {
+  width: 110px;
+  height: 38px;
+  border: 1px solid rgba(42, 33, 24, 0.16);
+  background: #fff;
+  color: inherit;
+  font-weight: 700;
+  text-align: right;
+  border-radius: 10px;
+  padding: 6px 10px;
+}
+
+/* ---------- Phone ---------- */
+@media (max-width: 800px) {
+  /* Description (full) / Amount | Day / Category | Type / Buttons (full) */
+  .recurring-form {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "desc desc"
+      "amount day"
+      "cat type"
+      "btn btn";
+  }
+
+  .recurring-form > :nth-child(1) { grid-area: desc; }
+  .recurring-form > :nth-child(2) { grid-area: amount; }
+  .recurring-form > :nth-child(3) { grid-area: cat; }
+  .recurring-form > :nth-child(4) { grid-area: type; }
+  .recurring-form > :nth-child(5) { grid-area: day; }
+  .recurring-form > :nth-child(6) { grid-area: btn; }
+
+  .recurring-form input,
+  .recurring-form select,
+  .due-amount input {
+    font-size: 16px; /* stops iOS from zooming on focus */
+  }
+
+  .recurring-buttons button {
+    flex: 1;
+  }
+
+  .recurring-list li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "main amount"
+      "actions actions";
+    row-gap: 8px;
+  }
+
+  .recurring-list .recurring-main { grid-area: main; }
+  .recurring-list .recurring-amount { grid-area: amount; }
+  .recurring-list .row-actions { grid-area: actions; }
+
+  .due-head {
+    flex-direction: column;
+  }
+
+  .due-head button {
+    width: 100%;
+  }
+
+  .due-list li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "main amount"
+      "actions actions";
+    row-gap: 8px;
+  }
+
+  .due-list .recurring-main { grid-area: main; }
+  .due-list .due-amount { grid-area: amount; }
+  .due-list .row-actions { grid-area: actions; }
+
+  .due-list .row-actions button {
+    flex: 1;
+    padding: 8px;
+  }
+}

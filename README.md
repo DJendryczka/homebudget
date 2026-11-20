@@ -9,6 +9,8 @@ Installable on your phone as a PWA. UI in Swedish, Polish and English.
 - **Shared home**: transactions and budgets belong to a home, not to a single person
 - **Transactions**: income and expenses with category and date, editing and deletion
 - **Monthly budgets** per category with progress bars
+- **Recurring transactions** (rent, electricity, salary…): defined once in Settings; each month they
+  show up under Month as a "To add" list – adjust the amount, add one or all, or skip
 - **Overview**: yearly totals, savings pots (Sparande, Pension, Buffertkonto), monthly chart,
   where the money goes, and a side-by-side comparison of two months
 - **PWA**: add to the home screen on iPhone/Android
@@ -52,7 +54,8 @@ Security rules are in [`firestore.rules`](firestore.rules).
 | `users/{uid}` | Profile and `homeId` |
 | `homes/{homeId}` | Home name, owner, `budgets` per category |
 | `homes/{homeId}/members/{uid}` | Members of the home |
-| `homes/{homeId}/expenses/{id}` | Transactions |
+| `homes/{homeId}/expenses/{id}` | Transactions (`recurringId` if added from a recurring item) |
+| `homes/{homeId}/recurring/{id}` | Recurring transactions: amount, category, `day` of month, `skippedMonths` |
 
 ## Structure
 
@@ -62,6 +65,7 @@ src/
   categories.js        list of categories (the single source)
   totals.js            sums per type / category
   useExpenses.js       live list of transactions for a home
+  useRecurring.js      live list of recurring transactions + what is due in a month
   ensureHome.js        creates a home on first login (+ migration of old data)
   i18n.jsx             translations sv / pl / en
   admin.js             admin e-mail
@@ -71,6 +75,8 @@ src/
     AddExpense.jsx     add form
     ExpenseList.jsx    Month tab: totals, budgets, transaction list
     BudgetBars.jsx     budget bars (shared)
+    RecurringSettings.jsx  recurring transactions in Settings
+    RecurringDue.jsx   "To add" card in the Month tab
     Settings.jsx       language, home name, budgets
     AdminPanel.jsx     approving users
 ```

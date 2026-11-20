@@ -5,6 +5,7 @@ import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { LangSwitch, useI18n } from "../i18n";
 import { BUDGET_KEYS } from "../categories";
+import RecurringSettings from "./RecurringSettings";
 import "../save-notice.css";
 import "../budget-ui.css";
 
@@ -151,6 +152,8 @@ function Settings({ homeId, homeName, budgets, onRename, onBudgets }) {
           {status === "saving" ? t.saving : t.save}
         </button>
       </form>
+
+      <RecurringSettings homeId={homeId} />
 
       <button
         className="logout"

@@ -21,6 +21,6 @@ export function parseAmount(text) {
 
 // Amount for the input field when editing (comma in sv/pl).
 export function amountForInput(value, lang) {
-  const text = String(value);
+  const text = Number.isInteger(value) ? String(value) : Number(value).toFixed(2);
   return lang === "en" ? text : text.replace(".", ",");
 }

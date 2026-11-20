@@ -35,6 +35,7 @@ export function useExpenses(homeId) {
             date,
             monthKey: date.slice(0, 7),
             year: date.slice(0, 4),
+            recurringId: data.recurringId || null,
           };
         });
         next.sort((a, b) => b.date.localeCompare(a.date));

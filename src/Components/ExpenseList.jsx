@@ -7,6 +7,8 @@ import { CATEGORY_KEYS } from "../categories";
 import { spentByCategory, sumByType } from "../totals";
 import { amountForInput, formatMoney, parseAmount } from "../format";
 import BudgetBars from "./BudgetBars";
+import RecurringDue from "./RecurringDue";
+import { useRecurring } from "../useRecurring";
 import "./../edit-row.css";
 import "../budget-ui.css";
 import "../tx-list.css";
@@ -90,6 +92,7 @@ function EditRow({ exp, onCancel, onSave }) {
 function ExpenseList({ homeId, budgets = {} }) {
   const { lang, t } = useI18n();
   const { items } = useExpenses(homeId);
+  const { recurring } = useRecurring(homeId);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState("");
@@ -132,6 +135,8 @@ function ExpenseList({ homeId, budgets = {} }) {
 
   return (
     <section className="panel">
+      <RecurringDue homeId={homeId} monthKey={selectedMonth} recurring={recurring} items={items} />
+
       <div className="totals">
         <div className="total total-in">
           <span>{t.income}</span>

@@ -168,7 +168,8 @@ service cloud.firestore {
             && optString(data, "category", 60)
             && (!("date" in data)
                 || (data.date is string && data.date.matches("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")))
-            && (!("createdAt" in data) || data.createdAt is timestamp || data.createdAt is string);
+            && (!("createdAt" in data) || data.createdAt is timestamp || data.createdAt is string)
+            && (!("recurringId" in data) || (data.recurringId is string && data.recurringId.size() <= 128));
         }
 
         allow read: if isMember(homeId);
@@ -183,6 +184,38 @@ service cloud.firestore {
           && request.resource.data.get("createdBy", null) == resource.data.get("createdBy", null);
 
         allow delete: if isMember(homeId);
+      }
+
+      // ----- Recurring transactions (rent, electricity, salary…) -----
+      match /recurring/{recurringId} {
+        function validRecurring(data) {
+          return data.keys().hasOnly(["description", "amount", "category", "type", "day",
+                                      "startMonth", "skippedMonths", "createdBy", "createdAt"])
+            && data.description is string
+            && data.description.size() > 0
+            && data.description.size() <= 200
+            && data.amount is number
+            && data.amount > 0
+            && data.type in ["expense", "income"]
+            && data.category is string
+            && data.category.size() <= 60
+            && data.day is int
+            && data.day >= 1
+            && data.day <= 31
+            && data.startMonth is string
+            && data.startMonth.matches("^[0-9]{4}-[0-9]{2}$")
+            && (!("skippedMonths" in data) || (data.skippedMonths is list && data.skippedMonths.size() <= 120));
+        }
+
+        allow read, delete: if isMember(homeId);
+
+        allow create: if isMember(homeId)
+          && validRecurring(request.resource.data)
+          && request.resource.data.createdBy == request.auth.uid;
+
+        allow update: if isMember(homeId)
+          && validRecurring(request.resource.data)
+          && request.resource.data.createdBy == resource.data.createdBy;
       }
     }
 
