@@ -1,40 +1,194 @@
 rules_version = '2';
+
+// HomeBudget – Firestore security rules
+//
+// Model dostępu:
+//   1. Logowanie Google  -> użytkownik tworzy accessRequests/{uid} ze statusem "pending".
+//   2. Admin zatwierdza  -> status "approved" (zmienić status może TYLKO admin).
+//   3. Zatwierdzony      -> może założyć dom (homes/{homeId}) i zostaje jego właścicielem.
+//   4. Dane domu         -> czytać/pisać mogą tylko członkowie domu, którzy są nadal zatwierdzeni.
+//   Odebranie dostępu (status "denied") natychmiast odcina od danych.
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ---------- Pomocnicze ----------
+
     function signedIn() {
       return request.auth != null;
     }
 
-    function isMember(homeId) {
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Admin sprawdzany po stronie serwera (nie tylko w UI).
+    function isAdmin() {
       return signedIn()
-        && exists(/databases/$(database)/documents/homes/$(homeId)/members/$(request.auth.uid));
+        && request.auth.token.email == "dariusz.jendryczka@gmail.com"
+        && request.auth.token.email_verified == true;
+    }
+
+    function requestPath(uid) {
+      return /databases/$(database)/documents/accessRequests/$(uid);
+    }
+
+    function isApproved() {
+      return isAdmin()
+        || (signedIn()
+            && exists(requestPath(request.auth.uid))
+            && get(requestPath(request.auth.uid)).data.status == "approved");
+    }
+
+    function homePath(homeId) {
+      return /databases/$(database)/documents/homes/$(homeId);
+    }
+
+    function memberPath(homeId, uid) {
+      return /databases/$(database)/documents/homes/$(homeId)/members/$(uid);
+    }
+
+    function isMember(homeId) {
+      return isApproved() && exists(memberPath(homeId, request.auth.uid));
     }
 
     function isOwner(homeId) {
-      return signedIn()
-        && get(/databases/$(database)/documents/homes/$(homeId)).data.ownerUid == request.auth.uid;
+      return isApproved() && get(homePath(homeId)).data.ownerUid == request.auth.uid;
     }
+
+    function optString(data, key, maxLen) {
+      return !(key in data) || (data[key] is string && data[key].size() <= maxLen);
+    }
+
+    // ---------- Prośby o dostęp ----------
+
+    match /accessRequests/{uid} {
+      // Użytkownik widzi swoją prośbę, admin widzi wszystkie (lista w AdminPanel).
+      allow read: if isSelf(uid) || isAdmin();
+
+      // Użytkownik może utworzyć TYLKO własną prośbę i TYLKO jako "pending",
+      // z własnym e-mailem (żeby nie dało się podszyć pod kogoś w panelu admina).
+      allow create: if isSelf(uid)
+        && request.resource.data.keys().hasOnly(["email", "name", "status", "requestedAt"])
+        && request.resource.data.status == "pending"
+        && request.resource.data.email == request.auth.token.email
+        && optString(request.resource.data, "name", 200)
+        && request.resource.data.requestedAt == request.time;
+
+      // Status zmienia tylko admin (zatwierdź / odrzuć / odbierz dostęp).
+      allow create, update: if isAdmin()
+        && request.resource.data.status in ["pending", "approved", "denied"];
+
+      allow delete: if isAdmin();
+    }
+
+    // ---------- Profil użytkownika ----------
 
     match /users/{uid} {
-      allow read, write: if signedIn() && request.auth.uid == uid;
+      // Admin potrzebuje listy użytkowników w AdminPanel.
+      allow read: if isSelf(uid) || isAdmin();
 
+      allow create, update: if isSelf(uid)
+        && isApproved()
+        && request.resource.data.keys().hasOnly(["email", "name", "homeId", "migrated"])
+        && optString(request.resource.data, "email", 320)
+        && optString(request.resource.data, "name", 200)
+        && optString(request.resource.data, "homeId", 128)
+        && (!("migrated" in request.resource.data) || request.resource.data.migrated is bool);
+
+      allow delete: if false;
+
+      // Stare wydatki (przed domami) – tylko do odczytu, na potrzeby migracji.
       match /expenses/{expenseId} {
-        allow read: if signedIn() && request.auth.uid == uid;
+        allow read: if isSelf(uid);
+        allow write: if false;
       }
     }
 
-    match /homes/{homeId} {
-      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
-      allow read, update: if isMember(homeId);
+    // ---------- Domy ----------
 
+    match /homes/{homeId} {
+      // Nowy dom: tylko zatwierdzony użytkownik, który zostaje właścicielem.
+      allow create: if isApproved()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.keys().hasOnly(["name", "ownerUid", "createdAt", "budgets"])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 60
+        && request.resource.data.budgets is map;
+
+      allow read: if isMember(homeId);
+
+      // Członek może zmienić nazwę i budżety – nic więcej (np. nie przejmie ownerUid).
+      allow update: if isMember(homeId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["name", "budgets"])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 60
+        && (!("budgets" in request.resource.data) || request.resource.data.budgets is map);
+
+      allow delete: if false;
+
+      // ----- Członkowie -----
       match /members/{memberId} {
         allow read: if isMember(homeId);
-        allow create: if signedIn() && (memberId == request.auth.uid || isOwner(homeId));
+
+        // a) Zakładanie domu: właściciel dodaje sam siebie w tym samym batchu
+        //    (getAfter widzi dom, który jeszcze nie istnieje przed zapisem).
+        // b) Później: tylko właściciel może dodać innych członków.
+        allow create: if isApproved()
+          && request.resource.data.keys().hasOnly(["role", "email", "name", "joinedAt"])
+          && request.resource.data.role in ["owner", "member"]
+          && (
+            (memberId == request.auth.uid
+              && request.resource.data.role == "owner"
+              && getAfter(homePath(homeId)).data.ownerUid == request.auth.uid)
+            ||
+            (isOwner(homeId)
+              && memberId != request.auth.uid
+              && request.resource.data.role == "member")
+          );
+
+        allow update: if false;
+
+        // Właściciel może usunąć członka, członek może sam wyjść.
+        // Właściciel nie może usunąć sam siebie (dom zostałby bez właściciela).
+        allow delete: if isApproved()
+          && memberId != get(homePath(homeId)).data.ownerUid
+          && (isOwner(homeId) || memberId == request.auth.uid);
       }
 
+      // ----- Transakcje -----
       match /expenses/{expenseId} {
-        allow read, create, update, delete: if isMember(homeId);
+        function validExpense(data) {
+          return data.description is string
+            && data.description.size() > 0
+            && data.description.size() <= 200
+            && data.amount is number
+            && (!("type" in data) || data.type in ["expense", "income"])
+            && optString(data, "category", 60)
+            && (!("date" in data)
+                || (data.date is string && data.date.matches("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")))
+            && (!("createdAt" in data) || data.createdAt is timestamp || data.createdAt is string);
+        }
+
+        allow read: if isMember(homeId);
+
+        allow create: if isMember(homeId)
+          && validExpense(request.resource.data)
+          && request.resource.data.createdBy == request.auth.uid;
+
+        // Każdy członek może edytować, ale autor transakcji się nie zmienia.
+        allow update: if isMember(homeId)
+          && validExpense(request.resource.data)
+          && request.resource.data.get("createdBy", null) == resource.data.get("createdBy", null);
+
+        allow delete: if isMember(homeId);
       }
+    }
+
+    // Wszystko inne – zablokowane.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
