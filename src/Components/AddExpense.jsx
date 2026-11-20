@@ -21,11 +21,10 @@ function AddExpense({ homeId }) {
   const [type, setType] = useState("expense");
   const [date, setDate] = useState(today);
   const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (saving || !description.trim() || !date || !auth.currentUser || !homeId) return;
+    if (!description.trim() || !date || !auth.currentUser || !homeId) return;
 
     const value = parseAmount(amount);
     if (value === null) {
@@ -33,25 +32,22 @@ function AddExpense({ homeId }) {
       return;
     }
 
-    setSaving(true);
+    // Don't wait for the server: Firestore saves the transaction on the device right away
+    // (it shows up in the list at once) and sends it on as soon as there's a connection.
+    // Without signal, waiting here would block the form until you're back online.
     setError("");
-    try {
-      await addDoc(collection(db, "homes", homeId, "expenses"), {
-        description: description.trim(),
-        amount: value,
-        category,
-        type,
-        date,
-        createdAt: new Date(),
-        createdBy: auth.currentUser.uid,
-      });
-    } catch (err) {
+    addDoc(collection(db, "homes", homeId, "expenses"), {
+      description: description.trim(),
+      amount: value,
+      category,
+      type,
+      date,
+      createdAt: new Date(),
+      createdBy: auth.currentUser.uid,
+    }).catch((err) => {
       console.error("Could not add transaction:", err);
       setError(t.addError);
-      setSaving(false);
-      return;
-    }
-    setSaving(false);
+    });
 
     setDescription("");
     setAmount("");
@@ -96,7 +92,7 @@ function AddExpense({ homeId }) {
           <option value="income">{t.income}</option>
         </select>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
-        <button type="submit" disabled={saving}>
+        <button type="submit">
           {t.add}
         </button>
       </div>

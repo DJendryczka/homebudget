@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useOnline } from "./useOnline";
 import Auth from "./Components/Auth";
 import ExpenseList from "./Components/ExpenseList";
 import AddExpense from "./Components/AddExpense";
@@ -26,6 +27,7 @@ function App() {
   const [tab, setTab] = useState("overview");
   const { t } = useI18n();
   const admin = isSuperAdmin(user);
+  const online = useOnline();
 
   useEffect(() => {
     if (!user || admin) {
@@ -103,6 +105,11 @@ function App() {
   return (
     <div className="app-shell">
       <div className="budget">
+        {!online ? (
+          <p className="offline-bar" role="status">
+            {t.offline}
+          </p>
+        ) : null}
         <nav className="tabs">
           {tabs.map(([id, label]) => (
             <button key={id} type="button" className={tab === id ? "active" : ""} onClick={() => setTab(id)}>

@@ -96,6 +96,9 @@ function ExpenseList({ homeId, budgets = {} }) {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [allMonths, setAllMonths] = useState(false);
 
   const grouped = items.reduce((groups, item) => {
     if (!groups[item.monthKey]) groups[item.monthKey] = [];
@@ -110,27 +113,46 @@ function ExpenseList({ homeId, budgets = {} }) {
   const balance = totalIncome - totalExpense;
   const money = (value) => formatMoney(value, lang, { currency: true });
 
-  const handleDelete = async (id) => {
-    if (!homeId || !window.confirm(t.deleteConfirm)) return;
-    setError("");
-    try {
-      await deleteDoc(doc(db, "homes", homeId, "expenses", id));
-    } catch (err) {
-      console.error("Delete failed:", err);
-      setError(t.deleteError);
-    }
+  // Search and filter – only affect the list; the tiles and budgets show the whole month
+  const filtering = query.trim() !== "" || filterCategory !== "all" || allMonths;
+  const source = allMonths ? items : currentExpenses;
+  const needle = query.trim().toLowerCase();
+  const shown = filtering
+    ? source.filter((item) => {
+        if (filterCategory !== "all" && item.category !== filterCategory) return false;
+        if (!needle) return true;
+        const categoryName = (t.categories[item.category] || item.category).toLowerCase();
+        return item.description.toLowerCase().includes(needle) || categoryName.includes(needle);
+      })
+    : currentExpenses;
+  const shownExpense = sumByType(shown, "expense");
+  const shownIncome = sumByType(shown, "income");
+  const categoryOptions = CATEGORY_KEYS.filter((key) => source.some((item) => item.category === key));
+  const clearFilter = () => {
+    setQuery("");
+    setFilterCategory("all");
+    setAllMonths(false);
   };
 
-  const handleSave = async (id, next) => {
+  // Changes are not awaited: they are applied on the device at once and sent
+  // to the server when there's a connection (also without signal).
+  const handleDelete = (id) => {
+    if (!homeId || !window.confirm(t.deleteConfirm)) return;
+    setError("");
+    deleteDoc(doc(db, "homes", homeId, "expenses", id)).catch((err) => {
+      console.error("Delete failed:", err);
+      setError(t.deleteError);
+    });
+  };
+
+  const handleSave = (id, next) => {
     if (!homeId) return;
     setError("");
-    try {
-      await updateDoc(doc(db, "homes", homeId, "expenses", id), next);
-      setEditingId(null);
-    } catch (err) {
+    setEditingId(null);
+    updateDoc(doc(db, "homes", homeId, "expenses", id), next).catch((err) => {
       console.error("Update failed:", err);
       setError(t.updateError);
-    }
+    });
   };
 
   return (
@@ -165,13 +187,50 @@ function ExpenseList({ homeId, budgets = {} }) {
         </select>
       </label>
 
+      <div className="tx-filter">
+        <input
+          type="search"
+          value={query}
+          placeholder={t.searchPlaceholder}
+          aria-label={t.searchPlaceholder}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <select
+          value={filterCategory}
+          aria-label={t.category}
+          onChange={(event) => setFilterCategory(event.target.value)}
+        >
+          <option value="all">{t.allCategories}</option>
+          {categoryOptions.map((key) => (
+            <option key={key} value={key}>
+              {t.categories[key] || key}
+            </option>
+          ))}
+        </select>
+        <label className="tx-filter-all">
+          <input type="checkbox" checked={allMonths} onChange={(event) => setAllMonths(event.target.checked)} />
+          {t.allMonths}
+        </label>
+      </div>
+
+      {filtering ? (
+        <div className="tx-filter-summary" role="status">
+          <span>{shown.length === 1 ? t.matchOne : t.matches.replace("{n}", shown.length)}</span>
+          {shownExpense > 0 ? <strong className="money-out">−{money(shownExpense)}</strong> : null}
+          {shownIncome > 0 ? <strong className="money-in">+{money(shownIncome)}</strong> : null}
+          <button type="button" className="quiet" onClick={clearFilter}>
+            {t.clearFilter}
+          </button>
+        </div>
+      ) : null}
+
       {error ? (
         <p className="form-error list-error" role="alert">
           {error}
         </p>
       ) : null}
 
-      {currentExpenses.length > 0 ? (
+      {shown.length > 0 ? (
         <table className="sheet tx-list">
           <thead>
             <tr>
@@ -184,7 +243,7 @@ function ExpenseList({ homeId, budgets = {} }) {
             </tr>
           </thead>
           <tbody>
-            {currentExpenses.map((exp) =>
+            {shown.map((exp) =>
               editingId === exp.id ? (
                 <EditRow
                   key={exp.id}
@@ -195,7 +254,12 @@ function ExpenseList({ homeId, budgets = {} }) {
               ) : (
                 <tr key={exp.id}>
                   <td className="c-date">{exp.date}</td>
-                  <td className="c-desc">{exp.description}</td>
+                  <td className="c-desc">
+                    {exp.description}
+                    {exp.pending ? (
+                      <span className="pending-sync" title={t.pendingSync} aria-label={t.pendingSync} />
+                    ) : null}
+                  </td>
                   <td className="c-cat">{t.categories[exp.category] || exp.category}</td>
                   <td className="c-type">
                     <span className={`tag ${exp.type === "income" ? "tag-in" : "tag-out"}`}>
@@ -222,9 +286,7 @@ function ExpenseList({ homeId, budgets = {} }) {
           </tbody>
         </table>
       ) : (
-        <p className="empty">
-          {t.empty} {selectedMonth}.
-        </p>
+        <p className="empty">{filtering ? t.noMatches : `${t.empty} ${selectedMonth}.`}</p>
       )}
     </section>
   );

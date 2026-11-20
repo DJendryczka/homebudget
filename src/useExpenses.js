@@ -22,6 +22,8 @@ export function useExpenses(homeId) {
 
     return onSnapshot(
       collection(db, "homes", homeId, "expenses"),
+      // Metadata changes too, so the "not synced" marker disappears once the server confirms
+      { includeMetadataChanges: true },
       (snapshot) => {
         const next = snapshot.docs.map((docSnap) => {
           const data = docSnap.data();
@@ -37,6 +39,7 @@ export function useExpenses(homeId) {
             year: date.slice(0, 4),
             recurringId: data.recurringId || null,
             importId: data.importId || null,
+            pending: docSnap.metadata.hasPendingWrites,
           };
         });
         next.sort((a, b) => b.date.localeCompare(a.date));

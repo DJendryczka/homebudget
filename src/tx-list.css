@@ -179,3 +179,112 @@
     font-size: 0.85rem;
   }
 }
+
+/* Offline and synchronisation */
+.offline-bar {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #2a2118;
+  color: #f7f3ee;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.offline-bar::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: #e8a598;
+  vertical-align: middle;
+}
+
+/* Small dot next to a transaction not yet sent to the server */
+.pending-sync {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: #c46b3a;
+  vertical-align: middle;
+  animation: pending-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pending-pulse {
+  50% { opacity: 0.3; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pending-sync { animation: none; }
+}
+
+/* Search and filter */
+.tx-filter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px auto;
+  gap: 10px;
+  align-items: center;
+  margin: 12px 0;
+}
+
+.tx-filter input[type="search"],
+.tx-filter select {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  border: 1px solid rgba(42, 33, 24, 0.16);
+  background: #fff;
+  color: #2a2118;
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.tx-filter-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  color: #6b5e52;
+}
+
+.tx-filter-all input {
+  width: 18px;
+  height: 18px;
+  accent-color: #2a2118;
+}
+
+.tx-filter-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #f3efe8;
+  font-size: 0.9rem;
+}
+
+.tx-filter-summary .quiet {
+  margin-left: auto;
+}
+
+@media (max-width: 800px) {
+  .tx-filter {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .tx-filter input[type="search"] {
+    grid-column: 1 / -1;
+  }
+
+  .tx-filter input[type="search"],
+  .tx-filter select {
+    font-size: 16px; /* stops iOS from zooming on focus */
+  }
+}

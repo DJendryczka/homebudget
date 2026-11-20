@@ -17,6 +17,11 @@ Installable on your phone as a PWA. UI in Swedish, Polish and English.
 - **Overview**: yearly totals, savings pots (Sparande, Pension, Buffertkonto), monthly chart,
   where the money goes, and a side-by-side comparison of two months
 - **PWA**: add to the home screen on iPhone/Android
+- **Works without signal**: the service worker keeps the app files on the device and Firestore's local
+  cache keeps the data; changes made offline are saved on the device (marked with a dot) and sent
+  automatically when the connection is back
+- **Search and filter** in the Month tab: by description or category, optionally across all months,
+  with the number of matches and their total
 
 ## Stack
 

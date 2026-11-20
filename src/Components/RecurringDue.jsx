@@ -16,7 +16,6 @@ function currentMonth() {
 function RecurringDue({ homeId, monthKey, recurring, items }) {
   const { lang, t } = useI18n();
   const [amounts, setAmounts] = useState({});
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   // Only the current month and earlier – not next month in advance.
@@ -30,8 +29,8 @@ function RecurringDue({ homeId, monthKey, recurring, items }) {
 
   const amountText = (entry) => amounts[entry.id] ?? amountForInput(entry.amount, lang);
 
-  const add = async (entries) => {
-    if (busy || !auth.currentUser) return;
+  const add = (entries) => {
+    if (!auth.currentUser) return;
 
     const values = entries.map((entry) => parseAmount(amountText(entry)));
     if (values.some((value) => value === null)) {
@@ -39,7 +38,6 @@ function RecurringDue({ homeId, monthKey, recurring, items }) {
       return;
     }
 
-    setBusy(true);
     setError("");
     try {
       const batch = writeBatch(db);
@@ -55,27 +53,25 @@ function RecurringDue({ homeId, monthKey, recurring, items }) {
           recurringId: entry.id,
         });
       });
-      await batch.commit();
+      // Not awaited – works without signal too (see AddExpense)
+      batch.commit().catch((err) => {
+        console.error("Could not add recurring transactions:", err);
+        setError(t.addError);
+      });
     } catch (err) {
       console.error("Could not add recurring transactions:", err);
       setError(t.addError);
     }
-    setBusy(false);
   };
 
-  const skip = async (entry) => {
-    if (busy) return;
-    setBusy(true);
+  const skip = (entry) => {
     setError("");
-    try {
-      await updateDoc(doc(db, "homes", homeId, "recurring", entry.id), {
-        skippedMonths: arrayUnion(monthKey),
-      });
-    } catch (err) {
+    updateDoc(doc(db, "homes", homeId, "recurring", entry.id), {
+      skippedMonths: arrayUnion(monthKey),
+    }).catch((err) => {
       console.error("Could not skip recurring transaction:", err);
       setError(t.recurringError);
-    }
-    setBusy(false);
+    });
   };
 
   return (
@@ -88,7 +84,7 @@ function RecurringDue({ homeId, monthKey, recurring, items }) {
           <p>{t.dueHint}</p>
         </div>
         {due.length > 1 ? (
-          <button type="button" className="primary" disabled={busy} onClick={() => add(due)}>
+          <button type="button" className="primary" onClick={() => add(due)}>
             {t.addAll}
           </button>
         ) : null}
@@ -118,10 +114,10 @@ function RecurringDue({ homeId, monthKey, recurring, items }) {
               />
             </label>
             <div className="row-actions">
-              <button type="button" className="primary small" disabled={busy} onClick={() => add([entry])}>
+              <button type="button" className="primary small" onClick={() => add([entry])}>
                 {t.add}
               </button>
-              <button type="button" className="quiet" disabled={busy} onClick={() => skip(entry)}>
+              <button type="button" className="quiet" onClick={() => skip(entry)}>
                 {t.skip}
               </button>
             </div>
