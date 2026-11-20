@@ -8,7 +8,7 @@ export const translations = {
     login: "Logga in med Google",
     trust: "Säker inloggning via Google · inget lösenord",
     cards: [
-      { id: "tx", kicker: "01", title: "Transaktioner", text: "Lägg till inkomst eller utgift på några sekunder." },
+      { id: "tx", kicker: "01", title: "Transak\u00ADtioner", text: "Lägg till inkomst eller utgift på några sekunder." },
       { id: "bal", kicker: "02", title: "Saldo", text: "Se månadens plus, minus och balans direkt." },
       { id: "bud", kicker: "03", title: "Budgetar", text: "Sätt gränser per kategori och håll dig till dem." },
       { id: "rep", kicker: "04", title: "Rapporter", text: "Förstå vart pengarna tar vägen, månad efter månad." },
@@ -115,7 +115,7 @@ export const translations = {
     login: "Zaloguj się przez Google",
     trust: "Bezpieczne logowanie przez Google · bez hasła",
     cards: [
-      { id: "tx", kicker: "01", title: "Transakcje", text: "Dodaj przychód albo wydatek w kilka sekund." },
+      { id: "tx", kicker: "01", title: "Trans\u00ADakcje", text: "Dodaj przychód albo wydatek w kilka sekund." },
       { id: "bal", kicker: "02", title: "Saldo", text: "Zobacz plus, minus i bilans miesiąca od razu." },
       { id: "bud", kicker: "03", title: "Budżety", text: "Ustal limity na kategorie i trzymaj się ich." },
       { id: "rep", kicker: "04", title: "Raporty", text: "Zrozum, dokąd idą pieniądze, miesiąc po miesiącu." },
@@ -222,7 +222,7 @@ export const translations = {
     login: "Sign in with Google",
     trust: "Secure Google sign-in · no password",
     cards: [
-      { id: "tx", kicker: "01", title: "Transactions", text: "Add income or an expense in a few seconds." },
+      { id: "tx", kicker: "01", title: "Trans\u00ADactions", text: "Add income or an expense in a few seconds." },
       { id: "bal", kicker: "02", title: "Balance", text: "See the month’s in, out and balance at a glance." },
       { id: "bud", kicker: "03", title: "Budgets", text: "Set a limit per category and stay inside it." },
       { id: "rep", kicker: "04", title: "Reports", text: "Understand where the money goes, month after month." },

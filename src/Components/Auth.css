@@ -276,57 +276,75 @@
   color: #8a7968;
 }
 
+/* Tablet and phone: the same fan as on desktop, only smaller */
 @media (max-width: 860px) {
   .hero-page {
-    padding-left: 0;
-    padding-right: 0;
-    justify-content: flex-start;
-    padding-top: 88px;
-  }
-
-  .hero-head,
-  .cta {
-    padding-left: 24px;
-    padding-right: 24px;
-    width: 100%;
-    box-sizing: border-box;
+    justify-content: center;
+    min-height: 100svh;
+    padding: 64px 16px 72px;
   }
 
   .fan {
-    width: 100%;
+    --card: clamp(96px, 25vw, 190px);
+    margin: 36px 0 28px;
     min-height: 0;
-    margin: 28px 0 24px;
-    padding: 8px 20px 16px;
-    box-sizing: border-box;
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    align-items: stretch;
-    gap: 14px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: 20px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    padding-top: 16px;
   }
 
-  .fan::-webkit-scrollbar { display: none; }
-
-  .pillar,
-  .pillar-tx,
-  .pillar-bal,
-  .pillar-bud,
-  .pillar-rep {
-    flex: 0 0 78vw;
-    width: 78vw;
-    max-width: 280px;
-    height: 320px;
-    margin: 0;
-    transform: none;
-    scroll-snap-align: center;
+  .pillar {
+    width: var(--card);
+    height: calc(var(--card) * 1.42);
+    margin: 0 calc(var(--card) * -0.16);
+    border-radius: calc(var(--card) * 0.1);
   }
 
-  .pillar:hover,
-  .pillar:active { transform: none; }
+  .pillar-tx { transform: rotate(-11deg) translateY(calc(var(--card) * 0.1)); }
+  .pillar-bal { transform: rotate(-3.5deg) translateY(calc(var(--card) * 0.03)); }
+  .pillar-bud { transform: rotate(3.5deg) translateY(calc(var(--card) * 0.03)); }
+  .pillar-rep { transform: rotate(11deg) translateY(calc(var(--card) * 0.1)); z-index: 4; }
+
+  .pillar:hover {
+    transform: rotate(0deg) translateY(-10px) scale(1.06);
+  }
+
+  .art {
+    min-height: 0;
+    margin: 8px 8px 0;
+    border-radius: 10px;
+  }
+
+  .art-tx,
+  .art-bud,
+  .art-bal,
+  .art-rep {
+    padding: 10px;
+  }
+
+  .art-tx { gap: 6px; }
+  .art-tx .row { margin: 0; }
+  .art-tx i,
+  .art-tx b { height: 5px; }
+
+  .art-bud { gap: 8px; }
+  .art-bud .bar { height: 6px; }
+
+  .art-bal .num { font-size: 1.05rem; }
+  .art-bal .hint { font-size: 0.6rem; margin-top: 2px; }
+
+  .art-rep { gap: 4px; }
+
+  /* The right edge of these cards is covered by the next one,
+     so the text only gets the visible part (long words break with a hyphen) */
+  .pillar-copy { padding: 8px calc(var(--card) * 0.2) 10px 10px; }
+  .pillar-rep .pillar-copy { padding-right: 10px; }
+  .kicker { font-size: 0.6rem; }
+
+  .pillar-copy h2 {
+    margin: 2px 0 0;
+    font-size: clamp(0.72rem, 3.1vw, 0.95rem);
+    letter-spacing: -0.03em;
+  }
+
+  /* The cards overlap more here, so there's no room for the description */
+  .pillar-copy p { display: none; }
 }
