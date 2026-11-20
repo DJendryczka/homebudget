@@ -3,6 +3,7 @@ import { db, auth } from "../firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { useI18n } from "../i18n";
 import { CATEGORY_KEYS } from "../categories";
+import { parseAmount } from "../format";
 
 
 function today() {
@@ -19,20 +20,38 @@ function AddExpense({ homeId }) {
   const [category, setCategory] = useState("Food");
   const [type, setType] = useState("expense");
   const [date, setDate] = useState(today);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!description || !amount || !date || !auth.currentUser || !homeId) return;
+    if (saving || !description.trim() || !date || !auth.currentUser || !homeId) return;
 
-    await addDoc(collection(db, "homes", homeId, "expenses"), {
-      description,
-      amount: parseFloat(amount),
-      category,
-      type,
-      date,
-      createdAt: new Date(),
-      createdBy: auth.currentUser.uid,
-    });
+    const value = parseAmount(amount);
+    if (value === null) {
+      setError(t.invalidAmount);
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    try {
+      await addDoc(collection(db, "homes", homeId, "expenses"), {
+        description: description.trim(),
+        amount: value,
+        category,
+        type,
+        date,
+        createdAt: new Date(),
+        createdBy: auth.currentUser.uid,
+      });
+    } catch (err) {
+      console.error("Could not add transaction:", err);
+      setError(t.addError);
+      setSaving(false);
+      return;
+    }
+    setSaving(false);
 
     setDescription("");
     setAmount("");
@@ -54,10 +73,15 @@ function AddExpense({ homeId }) {
         />
         <input
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          type="number"
-          step="0.01"
+          onChange={(e) => {
+            setAmount(e.target.value);
+            if (error) setError("");
+          }}
+          type="text"
+          inputMode="decimal"
+          autoComplete="off"
           placeholder={t.amount}
+          aria-invalid={error === t.invalidAmount}
           required
         />
         <select value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -72,8 +96,15 @@ function AddExpense({ homeId }) {
           <option value="income">{t.income}</option>
         </select>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
-        <button type="submit">{t.add}</button>
+        <button type="submit" disabled={saving}>
+          {t.add}
+        </button>
       </div>
+      {error ? (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      ) : null}
     </form>
   );
 }

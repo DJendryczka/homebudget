@@ -1,9 +1,11 @@
 import { useI18n } from "../i18n";
+import { formatMoney } from "../format";
 
 // Budget bars: how much was spent per category compared with the limit.
 // budgets = { category: limit }, spent = { category: sum } (see spentByCategory).
 function BudgetBars({ budgets = {}, spent = {} }) {
-  const { t } = useI18n();
+  const { lang, t } = useI18n();
+  const num = (value) => formatMoney(value, lang, { decimals: 0 });
 
   const rows = Object.entries(budgets)
     .filter(([, limit]) => Number(limit) > 0)
@@ -23,7 +25,7 @@ function BudgetBars({ budgets = {}, spent = {} }) {
             <div className="cat-row">
               <span>{t.categories[row.key] || row.key}</span>
               <strong className={over ? "money-out" : "budget-meta"}>
-                {row.spent.toFixed(0)} / {row.limit.toFixed(0)} · {over ? t.over : `${left.toFixed(0)} ${t.remaining}`}
+                {num(row.spent)} / {num(row.limit)} · {over ? t.over : `${num(left)} ${t.remaining}`}
               </strong>
             </div>
             <div className={`cat-track ${over ? "over" : "ok"}`}>

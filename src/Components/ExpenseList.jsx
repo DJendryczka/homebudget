@@ -5,10 +5,11 @@ import { useI18n } from "../i18n";
 import { useExpenses } from "../useExpenses";
 import { CATEGORY_KEYS } from "../categories";
 import { spentByCategory, sumByType } from "../totals";
+import { amountForInput, formatMoney, parseAmount } from "../format";
 import BudgetBars from "./BudgetBars";
 import "./../edit-row.css";
 import "../budget-ui.css";
-
+import "../tx-list.css";
 
 function currentMonth() {
   const now = new Date();
@@ -16,23 +17,33 @@ function currentMonth() {
 }
 
 function EditRow({ exp, onCancel, onSave }) {
-  const { t } = useI18n();
+  const { lang, t } = useI18n();
   const [description, setDescription] = useState(exp.description);
-  const [amount, setAmount] = useState(String(exp.amount));
+  const [amount, setAmount] = useState(amountForInput(exp.amount, lang));
   const [category, setCategory] = useState(exp.category);
   const [type, setType] = useState(exp.type);
   const [date, setDate] = useState(exp.date);
+  const [invalid, setInvalid] = useState(false);
   const options = CATEGORY_KEYS.includes(category) ? CATEGORY_KEYS : [category, ...CATEGORY_KEYS];
+
+  const save = () => {
+    const value = parseAmount(amount);
+    if (value === null || !description.trim() || !date) {
+      setInvalid(true);
+      return;
+    }
+    onSave({ description: description.trim(), amount: value, category, type, date });
+  };
 
   return (
     <tr className="edit-row">
-      <td>
+      <td className="c-date">
         <input type="date" value={date} onChange={(event) => setDate(event.target.value)} required />
       </td>
-      <td>
+      <td className="c-desc">
         <input value={description} onChange={(event) => setDescription(event.target.value)} required />
       </td>
-      <td>
+      <td className="c-cat">
         <select value={category} onChange={(event) => setCategory(event.target.value)}>
           {options.map((key) => (
             <option key={key} value={key}>
@@ -41,36 +52,30 @@ function EditRow({ exp, onCancel, onSave }) {
           ))}
         </select>
       </td>
-      <td>
+      <td className="c-type">
         <select value={type} onChange={(event) => setType(event.target.value)}>
           <option value="expense">{t.expense}</option>
           <option value="income">{t.income}</option>
         </select>
       </td>
-      <td>
+      <td className="c-amount">
         <input
-          type="number"
-          step="0.01"
+          type="text"
+          inputMode="decimal"
+          autoComplete="off"
           value={amount}
-          onChange={(event) => setAmount(event.target.value)}
+          aria-invalid={invalid}
+          onChange={(event) => {
+            setAmount(event.target.value);
+            setInvalid(false);
+          }}
           required
         />
       </td>
-      <td>
+      <td className="c-actions">
+        {invalid ? <span className="form-error">{t.invalidAmount}</span> : null}
         <div className="row-actions">
-          <button
-            className="quiet"
-            type="button"
-            onClick={() =>
-              onSave({
-                description: description.trim(),
-                amount: Number(amount),
-                category,
-                type,
-                date,
-              })
-            }
-          >
+          <button className="quiet" type="button" onClick={save}>
             {t.save}
           </button>
           <button className="danger" type="button" onClick={onCancel}>
@@ -83,10 +88,11 @@ function EditRow({ exp, onCancel, onSave }) {
 }
 
 function ExpenseList({ homeId, budgets = {} }) {
-  const { t } = useI18n();
+  const { lang, t } = useI18n();
   const { items } = useExpenses(homeId);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [editingId, setEditingId] = useState(null);
+  const [error, setError] = useState("");
 
   const grouped = items.reduce((groups, item) => {
     if (!groups[item.monthKey]) groups[item.monthKey] = [];
@@ -99,23 +105,28 @@ function ExpenseList({ homeId, budgets = {} }) {
   const totalIncome = sumByType(currentExpenses, "income");
   const totalExpense = sumByType(currentExpenses, "expense");
   const balance = totalIncome - totalExpense;
+  const money = (value) => formatMoney(value, lang, { currency: true });
 
   const handleDelete = async (id) => {
     if (!homeId || !window.confirm(t.deleteConfirm)) return;
+    setError("");
     try {
       await deleteDoc(doc(db, "homes", homeId, "expenses", id));
-    } catch (error) {
-      console.error("Delete failed:", error);
+    } catch (err) {
+      console.error("Delete failed:", err);
+      setError(t.deleteError);
     }
   };
 
   const handleSave = async (id, next) => {
-    if (!homeId || !next.description || !next.date || Number.isNaN(next.amount)) return;
+    if (!homeId) return;
+    setError("");
     try {
       await updateDoc(doc(db, "homes", homeId, "expenses", id), next);
       setEditingId(null);
-    } catch (error) {
-      console.error("Update failed:", error);
+    } catch (err) {
+      console.error("Update failed:", err);
+      setError(t.updateError);
     }
   };
 
@@ -124,15 +135,15 @@ function ExpenseList({ homeId, budgets = {} }) {
       <div className="totals">
         <div className="total total-in">
           <span>{t.income}</span>
-          <strong>{totalIncome.toFixed(2)}</strong>
+          <strong>{money(totalIncome)}</strong>
         </div>
         <div className="total total-out">
           <span>{t.expenses}</span>
-          <strong>{totalExpense.toFixed(2)}</strong>
+          <strong>{money(totalExpense)}</strong>
         </div>
         <div className={`total ${balance >= 0 ? "total-ok" : "total-bad"}`}>
           <span>{t.balance}</span>
-          <strong>{balance.toFixed(2)}</strong>
+          <strong>{money(balance)}</strong>
         </div>
       </div>
 
@@ -149,8 +160,14 @@ function ExpenseList({ homeId, budgets = {} }) {
         </select>
       </label>
 
+      {error ? (
+        <p className="form-error list-error" role="alert">
+          {error}
+        </p>
+      ) : null}
+
       {currentExpenses.length > 0 ? (
-        <table className="sheet">
+        <table className="sheet tx-list">
           <thead>
             <tr>
               <th>{t.date}</th>
@@ -172,19 +189,19 @@ function ExpenseList({ homeId, budgets = {} }) {
                 />
               ) : (
                 <tr key={exp.id}>
-                  <td>{exp.date}</td>
-                  <td>{exp.description}</td>
-                  <td>{t.categories[exp.category] || exp.category}</td>
-                  <td>
+                  <td className="c-date">{exp.date}</td>
+                  <td className="c-desc">{exp.description}</td>
+                  <td className="c-cat">{t.categories[exp.category] || exp.category}</td>
+                  <td className="c-type">
                     <span className={`tag ${exp.type === "income" ? "tag-in" : "tag-out"}`}>
                       {exp.type === "income" ? t.income : t.expense}
                     </span>
                   </td>
-                  <td className={exp.type === "income" ? "money-in" : "money-out"}>
+                  <td className={`c-amount ${exp.type === "income" ? "money-in" : "money-out"}`}>
                     {exp.type === "income" ? "+" : "−"}
-                    {exp.amount.toFixed(2)}
+                    {money(exp.amount)}
                   </td>
-                  <td>
+                  <td className="c-actions">
                     <div className="row-actions">
                       <button className="quiet" type="button" onClick={() => setEditingId(exp.id)}>
                         {t.edit}

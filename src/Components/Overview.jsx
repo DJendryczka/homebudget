@@ -3,11 +3,10 @@ import { useI18n } from "../i18n";
 import { useExpenses } from "../useExpenses";
 import { spentByCategory, sumByCategory, sumByType } from "../totals";
 import BudgetBars from "./BudgetBars";
+import { LOCALES, formatMoney } from "../format";
 import "../budget-ui.css";
 import "../compare.css";
 import "../dashboard.css";
-
-const LOCALES = { sv: "sv-SE", pl: "pl-PL", en: "en-GB" };
 
 function monthKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -39,6 +38,8 @@ function Overview({ homeId, homeName, budgets = {} }) {
   const [budgetMonth, setBudgetMonth] = useState(() => currentMonthKey(currentYear));
   const [compareA, setCompareA] = useState(nowKey);
   const [compareB, setCompareB] = useState(previousMonthKey(nowKey));
+  const kr = (value) => formatMoney(value, lang, { decimals: 0, currency: true });
+  const num = (value) => formatMoney(value, lang, { decimals: 0 });
   const shownName = !homeName || homeName === "Home" ? t.home : homeName;
 
   const years = useMemo(() => {
@@ -128,27 +129,27 @@ function Overview({ homeId, homeName, budgets = {} }) {
           <div className="pair">
             <div className="total total-in">
               <span>{t.income}</span>
-              <strong>{income.toFixed(0)}</strong>
+              <strong>{kr(income)}</strong>
             </div>
             <div className="pot pot-savings">
               <span>{t.categories.Savings}</span>
-              <strong>{sumByCategory(yearItems, "Savings").toFixed(0)}</strong>
+              <strong>{kr(sumByCategory(yearItems, "Savings"))}</strong>
             </div>
             <div className="total total-out">
               <span>{t.expenses}</span>
-              <strong>{expenses.toFixed(0)}</strong>
+              <strong>{kr(expenses)}</strong>
             </div>
             <div className="pot pot-pension">
               <span>{t.categories.Pension}</span>
-              <strong>{sumByCategory(yearItems, "Pension").toFixed(0)}</strong>
+              <strong>{kr(sumByCategory(yearItems, "Pension"))}</strong>
             </div>
             <div className={`total ${balance >= 0 ? "total-ok" : "total-bad"}`}>
               <span>{t.balance}</span>
-              <strong>{balance.toFixed(0)}</strong>
+              <strong>{kr(balance)}</strong>
             </div>
             <div className="pot pot-buffer">
               <span>{t.categories.Buffertkonto}</span>
-              <strong>{sumByCategory(yearItems, "Buffertkonto").toFixed(0)}</strong>
+              <strong>{kr(sumByCategory(yearItems, "Buffertkonto"))}</strong>
             </div>
           </div>
         </div>
@@ -197,19 +198,19 @@ function Overview({ homeId, homeName, budgets = {} }) {
           <div className="compare-totals">
             <div>
               <span>{t.income}</span>
-              <strong>{incomeA.toFixed(0)}</strong>
-              <small>{incomeB.toFixed(0)}</small>
+              <strong>{num(incomeA)}</strong>
+              <small>{num(incomeB)}</small>
             </div>
             <div>
               <span>{t.expenses}</span>
-              <strong>{expenseA.toFixed(0)}</strong>
-              <small>{expenseB.toFixed(0)}</small>
+              <strong>{num(expenseA)}</strong>
+              <small>{num(expenseB)}</small>
             </div>
             <div>
               <span>{t.difference}</span>
               <strong className={expenseA - expenseB > 0 ? "money-out" : "money-in"}>
                 {expenseA - expenseB > 0 ? "+" : ""}
-                {(expenseA - expenseB).toFixed(0)}
+                {num(expenseA - expenseB)}
               </strong>
             </div>
           </div>
@@ -220,11 +221,11 @@ function Overview({ homeId, homeName, budgets = {} }) {
               {compareRows.map((row) => (
                 <li key={row.key}>
                   <span>{t.categories[row.key] || row.key}</span>
-                  <strong>{row.a.toFixed(0)}</strong>
-                  <strong>{row.b.toFixed(0)}</strong>
+                  <strong>{num(row.a)}</strong>
+                  <strong>{num(row.b)}</strong>
                   <strong className={row.diff > 0 ? "money-out" : row.diff < 0 ? "money-in" : ""}>
                     {row.diff > 0 ? "+" : ""}
-                    {row.diff.toFixed(0)}
+                    {num(row.diff)}
                   </strong>
                 </li>
               ))}
@@ -264,7 +265,7 @@ function Overview({ homeId, homeName, budgets = {} }) {
                       <div className="cat-row">
                         <span>{t.categories[category.key] || category.key}</span>
                         <strong>
-                          {category.amount.toFixed(0)} · {share}%
+                          {num(category.amount)} · {share}%
                         </strong>
                       </div>
                       <div className="cat-track">

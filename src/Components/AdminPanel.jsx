@@ -3,12 +3,12 @@ import { collection, onSnapshot, doc, setDoc, serverTimestamp } from "firebase/f
 import { db } from "../firebase";
 import { SUPER_ADMIN_EMAIL } from "../admin";
 import { useI18n } from "../i18n";
+import { LOCALES } from "../format";
 
 function formatWhen(value, lang) {
   if (!value) return "";
   const date = value.toDate ? value.toDate() : new Date(value);
-  const locales = { sv: "sv-SE", pl: "pl-PL", en: "en-GB" };
-  return date.toLocaleString(locales[lang] || "sv-SE", {
+  return date.toLocaleString(LOCALES[lang] || "sv-SE", {
     dateStyle: "medium",
     timeStyle: "short",
   });

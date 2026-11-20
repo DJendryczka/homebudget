@@ -1,0 +1,180 @@
+/* Validation and save error messages */
+.form-error,
+.entry .form-error {
+  margin: 10px 0 0;
+  color: #9a3412;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.list-error {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  background: #fbe9df;
+  border-radius: 12px;
+}
+
+.entry input[aria-invalid="true"],
+.edit-row input[aria-invalid="true"] {
+  border-color: #9a3412;
+  outline: 2px solid rgba(154, 52, 18, 0.2);
+}
+
+.entry button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.tx-list .c-amount {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.tx-list .c-date {
+  white-space: nowrap;
+}
+
+.tx-list .c-actions .form-error {
+  display: block;
+  margin: 0 0 6px;
+  text-align: right;
+}
+
+/* Phone: each transaction is a card instead of a table row */
+@media (max-width: 800px) {
+  /* 16px stops iOS from zooming the page on focus */
+  .entry input,
+  .entry select {
+    font-size: 16px;
+  }
+
+  .sheet.tx-list {
+    display: block;
+    width: 100%;
+    overflow: visible;
+    background: transparent;
+  }
+
+  .sheet.tx-list thead {
+    display: none;
+  }
+
+  .sheet.tx-list tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sheet.tx-list tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "desc desc amount"
+      "date cat  actions";
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 6px;
+    min-width: 0;
+    padding: 12px 14px;
+    background: #fffdfb;
+    border: 1px solid rgba(42, 33, 24, 0.06);
+    border-radius: 14px;
+  }
+
+  .sheet.tx-list td {
+    padding: 0;
+    border: none;
+    background: transparent;
+    min-width: 0;
+  }
+
+  .sheet.tx-list .c-desc {
+    grid-area: desc;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .sheet.tx-list .c-amount {
+    grid-area: amount;
+    text-align: right;
+    font-weight: 700;
+  }
+
+  .sheet.tx-list .c-date,
+  .sheet.tx-list .c-cat {
+    font-size: 0.8rem;
+    color: #8a7968;
+  }
+
+  .sheet.tx-list .c-date { grid-area: date; }
+
+  .sheet.tx-list .c-cat {
+    grid-area: cat;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sheet.tx-list .c-cat::before {
+    content: "· ";
+  }
+
+  /* The amount already shows the type (+ green / − red) */
+  .sheet.tx-list .c-type {
+    display: none;
+  }
+
+  .sheet.tx-list .c-actions { grid-area: actions; }
+
+  .sheet.tx-list .row-actions button {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  /* Editing on the phone: fields one under another */
+  .sheet.tx-list tr.edit-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "desc desc"
+      "amount date"
+      "cat type"
+      "actions actions";
+    background: #f7f3ee;
+  }
+
+  .sheet.tx-list .edit-row .c-type {
+    display: block;
+    grid-area: type;
+  }
+
+  .sheet.tx-list .edit-row .c-cat {
+    overflow: visible;
+  }
+
+  .sheet.tx-list .edit-row .c-cat::before {
+    content: none;
+  }
+
+  .sheet.tx-list .edit-row .c-amount {
+    text-align: left;
+  }
+
+  .sheet.tx-list .edit-row input,
+  .sheet.tx-list .edit-row select {
+    width: 100%;
+    min-width: 0;
+    padding: 10px 12px;
+    font-size: 16px; /* 16px stops iOS from zooming the page on focus */
+  }
+
+  .sheet.tx-list .edit-row .row-actions {
+    justify-content: stretch;
+  }
+
+  .sheet.tx-list .edit-row .row-actions button {
+    flex: 1;
+    padding: 10px;
+    font-size: 0.85rem;
+  }
+}
