@@ -137,3 +137,17 @@ button,
 ::-webkit-inner-spin-button {
   height: auto;
 }
+
+/* iPhone Safari gives date fields its own minimum width and centers the text,
+   so the field stuck out of the card. Here it behaves like the other fields. */
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+}

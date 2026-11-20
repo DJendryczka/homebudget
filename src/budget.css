@@ -270,9 +270,45 @@
 }
 
 @media (max-width: 800px) {
-  .entry-grid,
+  /* Form in two columns:
+     Description          (full width)
+     Amount    | Date
+     Category  | Type
+     Add                  (full width) */
+  .entry-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "desc desc"
+      "amount date"
+      "cat type"
+      "btn btn";
+  }
+
+  .entry-grid > :nth-child(1) { grid-area: desc; }
+  .entry-grid > :nth-child(2) { grid-area: amount; }
+  .entry-grid > :nth-child(3) { grid-area: cat; }
+  .entry-grid > :nth-child(4) { grid-area: type; }
+  .entry-grid > :nth-child(5) { grid-area: date; }
+  .entry-grid > :nth-child(6) { grid-area: btn; }
+
+  .entry-grid input,
+  .entry-grid select {
+    height: 50px;
+    min-width: 0;
+  }
+
+  /* Income | Expenses side by side, Balance below across the full width */
   .totals {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .totals .total:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .total strong {
+    font-size: 1.25rem;
   }
 
   .entry button {
