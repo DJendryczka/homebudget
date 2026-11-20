@@ -1,3 +1,26 @@
+/* Main action button (dark) */
+button.primary {
+  border: none;
+  background: #2a2118;
+  color: #f7f3ee;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+button.primary.small {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+button.primary:disabled,
+.due .quiet:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
 button {
   transition: transform 0.12s ease, background-color 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
 }

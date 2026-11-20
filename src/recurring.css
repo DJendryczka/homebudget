@@ -1,26 +1,4 @@
 /* ---------- Shared ---------- */
-button.primary {
-  border: none;
-  background: #2a2118;
-  color: #f7f3ee;
-  border-radius: 999px;
-  padding: 10px 18px;
-  font-weight: 650;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-button.primary.small {
-  padding: 6px 12px;
-  font-size: 0.8rem;
-}
-
-button.primary:disabled,
-.due .quiet:disabled {
-  opacity: 0.6;
-  cursor: progress;
-}
-
 .recurring-main {
   display: flex;
   flex-direction: column;

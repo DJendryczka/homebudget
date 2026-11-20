@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Auth from "./Components/Auth";
 import ExpenseList from "./Components/ExpenseList";
 import AddExpense from "./Components/AddExpense";
+import BankImport from "./Components/BankImport";
 import Overview from "./Components/Overview";
 import Settings from "./Components/Settings";
 import AdminPanel from "./Components/AdminPanel";
@@ -116,6 +117,7 @@ function App() {
         {tab === "month" ? (
           <>
             <AddExpense homeId={home.id} />
+            <BankImport homeId={home.id} />
             <ExpenseList homeId={home.id} budgets={home.budgets || {}} />
           </>
         ) : null}

@@ -11,6 +11,9 @@ Installable on your phone as a PWA. UI in Swedish, Polish and English.
 - **Monthly budgets** per category with progress bars
 - **Recurring transactions** (rent, electricity, salary…): defined once in Settings; each month they
   show up under Month as a "To add" list – adjust the amount, add one or all, or skip
+- **Bank import (CSV)**: tested with ICA Banken (also recognises the usual Swedbank/Handelsbanken/SEB/Nordea
+  column names). Preview with suggested categories, pending amounts skipped, already imported rows and
+  possible duplicates unchecked. Categories you change are remembered per home (`categoryRules`)
 - **Overview**: yearly totals, savings pots (Sparande, Pension, Buffertkonto), monthly chart,
   where the money goes, and a side-by-side comparison of two months
 - **PWA**: add to the home screen on iPhone/Android
@@ -64,6 +67,7 @@ src/
   App.jsx              login → approval → home → tabs
   categories.js        list of categories (the single source)
   totals.js            sums per type / category
+  bankImport.js        CSV parsing, category rules and duplicate detection for bank imports
   useExpenses.js       live list of transactions for a home
   useRecurring.js      live list of recurring transactions + what is due in a month
   ensureHome.js        creates a home on first login (+ migration of old data)
@@ -77,6 +81,7 @@ src/
     BudgetBars.jsx     budget bars (shared)
     RecurringSettings.jsx  recurring transactions in Settings
     RecurringDue.jsx   "To add" card in the Month tab
+    BankImport.jsx     bank statement import (CSV)
     Settings.jsx       language, home name, budgets
     AdminPanel.jsx     approving users
 ```
