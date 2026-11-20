@@ -17,6 +17,19 @@ Installable on your phone as a PWA. UI in Swedish, Polish and English.
 
 React 19 · Vite · Firebase Authentication · Cloud Firestore
 
+## Deploy
+
+Nothing deploys automatically on push – publish from your own computer:
+
+```bash
+npm run build
+firebase deploy --only hosting           # the app
+firebase deploy --only firestore:rules   # security rules from firestore.rules
+```
+
+`firebase.json` sets `Cache-Control: no-cache`, so the home-screen app picks up a new
+version right after a deploy.
+
 ## Getting started
 
 ```bash
@@ -31,8 +44,7 @@ access to data is controlled by the security rules.
 
 ## Firestore
 
-Security rules are in [`firestore.rules`](firestore.rules). They are deployed manually:
-Firebase Console → Firestore Database → Rules → paste → Publish.
+Security rules are in [`firestore.rules`](firestore.rules).
 
 | Collection | Contents |
 |---|---|
