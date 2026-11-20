@@ -3,33 +3,12 @@ import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useI18n } from "../i18n";
 import { useExpenses } from "../useExpenses";
+import { CATEGORY_KEYS } from "../categories";
+import { spentByCategory, sumByType } from "../totals";
+import BudgetBars from "./BudgetBars";
 import "./../edit-row.css";
 import "../budget-ui.css";
 
-const CATEGORY_KEYS = [
-  "Food",
-  "Sweets",
-  "Phone",
-  "Restaurant",
-  "Transport",
-  "Housing",
-  "Credit",
-  "Electricity",
-  "Internet",
-  "Subscriptions",
-  "Clothes",
-  "Health",
-  "Kids",
-  "Insurance",
-  "Entertainment",
-  "Gifts",
-  "Pets",
-  "Savings",
-  "Pension",
-  "Buffertkonto",
-  "Salary",
-  "Other",
-];
 
 function currentMonth() {
   const now = new Date();
@@ -105,7 +84,7 @@ function EditRow({ exp, onCancel, onSave }) {
 
 function ExpenseList({ homeId, budgets = {} }) {
   const { t } = useI18n();
-  const { items, user } = useExpenses(homeId);
+  const { items } = useExpenses(homeId);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [editingId, setEditingId] = useState(null);
 
@@ -117,27 +96,12 @@ function ExpenseList({ homeId, budgets = {} }) {
 
   const monthOptions = [...new Set([...Object.keys(grouped), selectedMonth])].sort((a, b) => b.localeCompare(a));
   const currentExpenses = grouped[selectedMonth] || [];
-  const totalIncome = currentExpenses.filter((item) => item.type === "income").reduce((sum, item) => sum + item.amount, 0);
-  const totalExpense = currentExpenses.filter((item) => item.type === "expense").reduce((sum, item) => sum + item.amount, 0);
+  const totalIncome = sumByType(currentExpenses, "income");
+  const totalExpense = sumByType(currentExpenses, "expense");
   const balance = totalIncome - totalExpense;
 
-  const spentByCategory = currentExpenses
-    .filter((item) => item.type === "expense")
-    .reduce((groups, item) => {
-      groups[item.category] = (groups[item.category] || 0) + item.amount;
-      return groups;
-    }, {});
-  const budgetRows = Object.entries(budgets)
-    .filter(([, limit]) => Number(limit) > 0)
-    .map(([key, limit]) => ({
-      key,
-      limit: Number(limit),
-      spent: spentByCategory[key] || 0,
-    }))
-    .sort((a, b) => b.spent / b.limit - a.spent / a.limit);
-
   const handleDelete = async (id) => {
-    if (!user || !homeId || !window.confirm(t.deleteConfirm)) return;
+    if (!homeId || !window.confirm(t.deleteConfirm)) return;
     try {
       await deleteDoc(doc(db, "homes", homeId, "expenses", id));
     } catch (error) {
@@ -146,7 +110,7 @@ function ExpenseList({ homeId, budgets = {} }) {
   };
 
   const handleSave = async (id, next) => {
-    if (!user || !homeId || !next.description || !next.date || Number.isNaN(next.amount)) return;
+    if (!homeId || !next.description || !next.date || Number.isNaN(next.amount)) return;
     try {
       await updateDoc(doc(db, "homes", homeId, "expenses", id), next);
       setEditingId(null);
@@ -172,28 +136,7 @@ function ExpenseList({ homeId, budgets = {} }) {
         </div>
       </div>
 
-      {budgetRows.length > 0 ? (
-        <ul className="budget-bars">
-          {budgetRows.map((row) => {
-            const share = row.limit > 0 ? Math.round((row.spent / row.limit) * 100) : 0;
-            const over = row.spent > row.limit;
-            const left = row.limit - row.spent;
-            return (
-              <li key={row.key}>
-                <div className="cat-row">
-                  <span>{t.categories[row.key] || row.key}</span>
-                  <strong className={over ? "money-out" : "budget-meta"}>
-                    {row.spent.toFixed(0)} / {row.limit.toFixed(0)} · {over ? t.over : `${left.toFixed(0)} ${t.remaining}`}
-                  </strong>
-                </div>
-                <div className={`cat-track ${over ? "over" : "ok"}`}>
-                  <span style={{ width: `${Math.min(share, 100)}%` }} />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
+      <BudgetBars budgets={budgets} spent={spentByCategory(currentExpenses)} />
 
       <label className="month">
         {t.month}

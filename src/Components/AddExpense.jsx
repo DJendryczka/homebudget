@@ -2,31 +2,8 @@ import { useState } from "react";
 import { db, auth } from "../firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { useI18n } from "../i18n";
+import { CATEGORY_KEYS } from "../categories";
 
-const CATEGORY_KEYS = [
-  "Food",
-  "Sweets",
-  "Phone",
-  "Restaurant",
-  "Transport",
-  "Housing",
-  "Credit",
-  "Electricity",
-  "Internet",
-  "Subscriptions",
-  "Clothes",
-  "Health",
-  "Kids",
-  "Insurance",
-  "Entertainment",
-  "Gifts",
-  "Pets",
-  "Savings",
-  "Pension",
-  "Buffertkonto",
-  "Salary",
-  "Other",
-];
 
 function today() {
   const now = new Date();

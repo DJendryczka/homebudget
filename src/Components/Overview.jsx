@@ -1,19 +1,13 @@
 import { useMemo, useState } from "react";
 import { useI18n } from "../i18n";
 import { useExpenses } from "../useExpenses";
+import { spentByCategory, sumByCategory, sumByType } from "../totals";
+import BudgetBars from "./BudgetBars";
 import "../budget-ui.css";
 import "../compare.css";
 import "../dashboard.css";
 
 const LOCALES = { sv: "sv-SE", pl: "pl-PL", en: "en-GB" };
-
-function sum(list, type) {
-  return list.filter((item) => item.type === type).reduce((total, item) => total + item.amount, 0);
-}
-
-function potSum(list, key) {
-  return list.filter((item) => item.category === key).reduce((total, item) => total + item.amount, 0);
-}
 
 function monthKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -36,15 +30,6 @@ function monthLabel(key, lang) {
   return new Date(year, month - 1, 1).toLocaleString(LOCALES[lang], { month: "short", year: "numeric" });
 }
 
-function spentByCategory(list) {
-  return list
-    .filter((item) => item.type === "expense")
-    .reduce((groups, item) => {
-      groups[item.category] = (groups[item.category] || 0) + item.amount;
-      return groups;
-    }, {});
-}
-
 function Overview({ homeId, homeName, budgets = {} }) {
   const { lang, t } = useI18n();
   const { items } = useExpenses(homeId);
@@ -62,8 +47,8 @@ function Overview({ homeId, homeName, budgets = {} }) {
   }, [items, currentYear]);
 
   const yearItems = items.filter((item) => item.year === year);
-  const income = sum(yearItems, "income");
-  const expenses = sum(yearItems, "expense");
+  const income = sumByType(yearItems, "income");
+  const expenses = sumByType(yearItems, "expense");
   const balance = income - expenses;
 
   const months = Array.from({ length: 12 }, (_, index) => {
@@ -72,8 +57,8 @@ function Overview({ homeId, homeName, budgets = {} }) {
     return {
       key,
       label: new Date(Number(year), index, 1).toLocaleString(LOCALES[lang], { month: "short" }),
-      income: sum(monthItems, "income"),
-      expense: sum(monthItems, "expense"),
+      income: sumByType(monthItems, "income"),
+      expense: sumByType(monthItems, "expense"),
     };
   });
   const max = Math.max(1, ...months.flatMap((month) => [month.income, month.expense]));
@@ -89,16 +74,7 @@ function Overview({ homeId, homeName, budgets = {} }) {
       }, {})
   ).sort((a, b) => b.amount - a.amount);
 
-  const monthItems = items.filter((item) => item.monthKey === budgetMonth && item.type === "expense");
-  const spentByBudget = spentByCategory(monthItems);
-  const budgetRows = Object.entries(budgets)
-    .filter(([, limit]) => Number(limit) > 0)
-    .map(([key, limit]) => ({
-      key,
-      limit: Number(limit),
-      spent: spentByBudget[key] || 0,
-    }))
-    .sort((a, b) => b.spent / b.limit - a.spent / a.limit);
+  const budgetSpent = spentByCategory(items.filter((item) => item.monthKey === budgetMonth));
 
   const compareOptions = useMemo(() => {
     const found = items.map((item) => item.monthKey);
@@ -116,10 +92,10 @@ function Overview({ homeId, homeName, budgets = {} }) {
       return { key, a, b, diff: a - b };
     })
     .sort((left, right) => Math.abs(right.diff) - Math.abs(left.diff));
-  const incomeA = sum(sideA, "income");
-  const incomeB = sum(sideB, "income");
-  const expenseA = sum(sideA, "expense");
-  const expenseB = sum(sideB, "expense");
+  const incomeA = sumByType(sideA, "income");
+  const incomeB = sumByType(sideB, "income");
+  const expenseA = sumByType(sideA, "expense");
+  const expenseB = sumByType(sideB, "expense");
 
   return (
     <section className="panel dash">
@@ -156,7 +132,7 @@ function Overview({ homeId, homeName, budgets = {} }) {
             </div>
             <div className="pot pot-savings">
               <span>{t.categories.Savings}</span>
-              <strong>{potSum(yearItems, "Savings").toFixed(0)}</strong>
+              <strong>{sumByCategory(yearItems, "Savings").toFixed(0)}</strong>
             </div>
             <div className="total total-out">
               <span>{t.expenses}</span>
@@ -164,7 +140,7 @@ function Overview({ homeId, homeName, budgets = {} }) {
             </div>
             <div className="pot pot-pension">
               <span>{t.categories.Pension}</span>
-              <strong>{potSum(yearItems, "Pension").toFixed(0)}</strong>
+              <strong>{sumByCategory(yearItems, "Pension").toFixed(0)}</strong>
             </div>
             <div className={`total ${balance >= 0 ? "total-ok" : "total-bad"}`}>
               <span>{t.balance}</span>
@@ -172,7 +148,7 @@ function Overview({ homeId, homeName, budgets = {} }) {
             </div>
             <div className="pot pot-buffer">
               <span>{t.categories.Buffertkonto}</span>
-              <strong>{potSum(yearItems, "Buffertkonto").toFixed(0)}</strong>
+              <strong>{sumByCategory(yearItems, "Buffertkonto").toFixed(0)}</strong>
             </div>
           </div>
         </div>
@@ -268,29 +244,10 @@ function Overview({ homeId, homeName, budgets = {} }) {
                 ))}
               </select>
             </div>
-            {budgetRows.length === 0 ? (
-              <p className="empty">{t.noBudget}</p>
+            {Object.values(budgets).some((limit) => Number(limit) > 0) ? (
+              <BudgetBars budgets={budgets} spent={budgetSpent} />
             ) : (
-              <ul className="budget-bars">
-                {budgetRows.map((row) => {
-                  const share = row.limit > 0 ? Math.round((row.spent / row.limit) * 100) : 0;
-                  const over = row.spent > row.limit;
-                  const left = row.limit - row.spent;
-                  return (
-                    <li key={row.key}>
-                      <div className="cat-row">
-                        <span>{t.categories[row.key] || row.key}</span>
-                        <strong className={over ? "money-out" : "budget-meta"}>
-                          {row.spent.toFixed(0)} / {row.limit.toFixed(0)} · {over ? t.over : `${left.toFixed(0)} ${t.remaining}`}
-                        </strong>
-                      </div>
-                      <div className={`cat-track ${over ? "over" : "ok"}`}>
-                        <span style={{ width: `${Math.min(share, 100)}%` }} />
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+              <p className="empty">{t.noBudget}</p>
             )}
           </div>
 

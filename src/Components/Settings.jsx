@@ -4,32 +4,10 @@ import { doc, setDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { LangSwitch, useI18n } from "../i18n";
+import { BUDGET_KEYS } from "../categories";
 import "../save-notice.css";
 import "../budget-ui.css";
 
-const BUDGET_KEYS = [
-  "Food",
-  "Sweets",
-  "Phone",
-  "Restaurant",
-  "Transport",
-  "Housing",
-  "Credit",
-  "Electricity",
-  "Internet",
-  "Subscriptions",
-  "Clothes",
-  "Health",
-  "Kids",
-  "Insurance",
-  "Entertainment",
-  "Gifts",
-  "Pets",
-  "Savings",
-  "Pension",
-  "Buffertkonto",
-  "Other",
-];
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
