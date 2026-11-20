@@ -1,0 +1,30 @@
+.row-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.quiet {
+  border: 1px solid rgba(42, 33, 24, 0.2);
+  background: #fffdfb;
+  color: #2a2118;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.edit-row td {
+  background: #f7f3ee;
+}
+
+.edit-row input,
+.edit-row select {
+  width: 100%;
+  border: 1px solid rgba(42, 33, 24, 0.16);
+  background: #fff;
+  color: #2a2118;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
